@@ -8,17 +8,20 @@ import {
   Pressable,
   Modal,
 } from "react-native";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Feather, AntDesign, Ionicons } from "@expo/vector-icons";
 import { launchCamera, launchImageLibrary } from "react-native-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import moment from "moment";
+import { Rating } from "@kolking/react-native-rating";
 
 export default function DetailTicket({ route, navigation }) {
   const { accessToken, idTicket } = route.params;
   const [modalVisible, setModalVisible] = useState(false);
   const [modalVisible2, setModalVisible2] = useState(false);
   const [inforTicket, setInforTicket] = useState();
+  const [users, setUsers] = useState([]);
+  const [rating, setRating] = useState(0);
 
   useEffect(() => {
     fetch(`https://ndl-be-apphanhchinh.onrender.com/ticket/${idTicket}`, {
@@ -29,6 +32,56 @@ export default function DetailTicket({ route, navigation }) {
       .then((res) => res.json())
       .then((data) => setInforTicket(data));
   }, []);
+
+  useEffect(() => {
+    fetch("https://ndl-be-apphanhchinh.onrender.com/user", {
+      headers: {
+        access_token: accessToken,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setUsers(data));
+  }, []);
+
+  const renderNameStaff = () => {
+    return users
+      .filter((item, index) => {
+        return item.googleID == inforTicket.staffID;
+      })
+      .map((item, index) => {
+        return (
+          <>
+            <Text
+              style={{
+                marginLeft: 10,
+                width: "50%",
+                flexShrink: 1,
+              }}
+            >
+              {item.name}
+            </Text>
+            <View
+              style={{
+                width: "20%",
+                display: "flex",
+                flexDirection: "row",
+              }}
+            >
+              <Image
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: 50,
+                }}
+                source={{ uri: item.imageURL }}
+              ></Image>
+            </View>
+          </>
+        );
+      });
+  };
+
+  const handleChange = useCallback((value) => setRating(value), [rating]);
 
   return (
     <View style={styles.container}>
@@ -47,16 +100,24 @@ export default function DetailTicket({ route, navigation }) {
         <View style={styles.body}>
           <View style={styles.inforTicket}>
             <Text style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>
-              {inforTicket != null ? inforTicket.title : null}
-            </Text>
-            <Text style={{ marginBottom: 5 }}>
-              Người Tiếp Nhận :
-              {inforTicket != null
-                ? inforTicket.status == "pending"
-                  ? " chưa tiếp nhận"
-                  : null
+              {inforTicket != null && users.length > 0
+                ? inforTicket.title
                 : null}
             </Text>
+            <View
+              style={{
+                marginBottom: 5,
+                display: "flex",
+                flexDirection: "row",
+
+                alignItems: "center",
+                justifyContent: "space-between",
+                position: "relative",
+              }}
+            >
+              <Text style={{ width: "30%" }}>Người tiếp nhận : </Text>
+              {inforTicket != null ? renderNameStaff() : null}
+            </View>
             <View style={{ display: "flex", flexDirection: "row" }}>
               <Text style={{ marginBottom: 5, marginRight: 10 }}>
                 {inforTicket != null
@@ -69,16 +130,6 @@ export default function DetailTicket({ route, navigation }) {
                   : null}
               </Text>
             </View>
-            <Image
-              source={{
-                uri:
-                  inforTicket != null
-                    ? inforTicket.staffID == ""
-                      ? undefined
-                      : undefined
-                    : undefined,
-              }}
-            ></Image>
           </View>
           <View style={styles.ticketStatus}>
             <Text style={{ fontSize: 16, fontWeight: 700 }}>
@@ -86,7 +137,11 @@ export default function DetailTicket({ route, navigation }) {
             </Text>
             <View style={styles.groupStatus}>
               <View
-                style={{ display: "flex", flexDirection: "row", margin: 20 }}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  marginBottom: 20,
+                }}
               >
                 <View
                   style={{
@@ -106,7 +161,6 @@ export default function DetailTicket({ route, navigation }) {
                   style={{
                     display: "flex",
                     justifyContent: "center",
-                    // alignItems: "center",
                   }}
                 >
                   <Text>Đã yêu cầu</Text>
@@ -118,7 +172,13 @@ export default function DetailTicket({ route, navigation }) {
                 </View>
               </View>
               <View
-                style={{ display: "flex", flexDirection: "row", margin: 20 }}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+
+                  marginTop: 20,
+                  marginBottom: 20,
+                }}
               >
                 <View
                   style={
@@ -146,16 +206,7 @@ export default function DetailTicket({ route, navigation }) {
                             alignItems: "center",
                             marginRight: 20,
                           }
-                      : {
-                          width: 50,
-                          height: 50,
-                          borderRadius: 50,
-                          backgroundColor: "#2d5381",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          marginRight: 20,
-                        }
+                      : null
                   }
                 >
                   {inforTicket != null ? (
@@ -168,9 +219,7 @@ export default function DetailTicket({ route, navigation }) {
                     ) : (
                       <AntDesign name="check" size={24} color="white" />
                     )
-                  ) : (
-                    ""
-                  )}
+                  ) : null}
                 </View>
                 <View
                   style={{
@@ -181,17 +230,26 @@ export default function DetailTicket({ route, navigation }) {
                 >
                   <Text>Yêu cầu đã tiếp nhận</Text>
                   <Text>
-                    {inforTicket != null ? inforTicket.receivedAt : ""}
+                    {inforTicket != null
+                      ? inforTicket.status == "pending"
+                        ? "--:--"
+                        : moment(inforTicket.receivedAt).format("hh:mm a")
+                      : ""}
                   </Text>
                 </View>
               </View>
               <View
-                style={{ display: "flex", flexDirection: "row", margin: 20 }}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  marginTop: 20,
+                }}
               >
                 <View
                   style={
                     inforTicket != null
-                      ? inforTicket.status == "pending"
+                      ? inforTicket.status == "pending" ||
+                        inforTicket.status == "processing"
                         ? {
                             width: 50,
                             height: 50,
@@ -214,20 +272,12 @@ export default function DetailTicket({ route, navigation }) {
                             alignItems: "center",
                             marginRight: 20,
                           }
-                      : {
-                          width: 50,
-                          height: 50,
-                          borderRadius: 50,
-                          backgroundColor: "#2d5381",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          marginRight: 20,
-                        }
+                      : null
                   }
                 >
                   {inforTicket != null ? (
-                    inforTicket.status == "pending" ? (
+                    inforTicket.status == "pending" ||
+                    inforTicket.status == "processing" ? (
                       <Ionicons
                         name="ios-reload-outline"
                         size={24}
@@ -244,24 +294,110 @@ export default function DetailTicket({ route, navigation }) {
                   style={{
                     display: "flex",
                     justifyContent: "center",
-                    // alignItems: "center",
                   }}
                 >
                   <Text>Yêu cầu đã hoàn thành</Text>
                   <Text>
-                    {inforTicket != null ? inforTicket.finishedAt : ""}
+                    {inforTicket != null
+                      ? inforTicket.status == "pending" ||
+                        inforTicket.status == "processing"
+                        ? "--:--"
+                        : moment(inforTicket.completedAt).format("hh:mm a")
+                      : ""}
                   </Text>
                 </View>
               </View>
             </View>
-            <Pressable style={styles.button}>
-              <Text style={{ color: "white", fontSize: 12, fontWeight: 700 }}>
-                Trở Về
-              </Text>
-            </Pressable>
+            {inforTicket != null ? (
+              inforTicket.status == "pending" ||
+              inforTicket.status == "processing" ? (
+                <Pressable style={styles.button}>
+                  <Text
+                    style={{ color: "white", fontSize: 12, fontWeight: 700 }}
+                  >
+                    Trở Về
+                  </Text>
+                </Pressable>
+              ) : (
+                <Pressable
+                  onPress={() => setModalVisible(true)}
+                  style={{ ...styles.button, width: "100%" }}
+                >
+                  <Text
+                    style={{ color: "white", fontSize: 12, fontWeight: 700 }}
+                  >
+                    Đánh giá
+                  </Text>
+                </Pressable>
+              )
+            ) : null}
           </View>
         </View>
       </View>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          Alert.alert("Modal has been closed.");
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={{ ...styles.modalView }}>
+            <Text style={styles.modalText}>Đánh giá phiếu hỗ trợ</Text>
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "center",
+                flexWrap: "wrap",
+                width: "100%",
+                overflow: "hidden",
+                alignItems: "flex-start",
+              }}
+            >
+              <Rating
+                style={{ height: 60 }}
+                size={40}
+                rating={rating}
+                onChange={handleChange}
+              />
+            </View>
+            <TextInput
+              textAlignVertical="top"
+              style={styles.input3}
+              multiline={true}
+              numberOfLines={7}
+              placeholder="Lời nhận xét"
+              // value={note}
+              // onChangeText={(text) => setNote(text)}
+            ></TextInput>
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+                width: "90%",
+              }}
+            >
+              <Pressable
+                style={[styles.button, styles.buttonClose]}
+                onPress={() => setModalVisible(!modalVisible)}
+              >
+                <Text style={styles.textStyle}>Hủy</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.button, styles.buttonClose]}
+                onPress={() => setModalVisible(!modalVisible)}
+              >
+                <Text style={styles.textStyle}>Gửi</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* <Modal
         animationType="slide"
@@ -325,7 +461,6 @@ export default function DetailTicket({ route, navigation }) {
 
 const styles = StyleSheet.create({
   container: {
-    // backgroundColor: "white",
     width: "100%",
     height: "100%",
     display: "flex",
@@ -403,7 +538,6 @@ const styles = StyleSheet.create({
   list: {
     width: "100%",
     backgroundColor: "#f1f4f5",
-    // padding: 10,
     borderRadius: 5,
     shadowColor: "#000",
     shadowOffset: {
@@ -424,7 +558,6 @@ const styles = StyleSheet.create({
   listShow: {
     width: "100%",
     backgroundColor: "#f1f4f5",
-    // padding: 10,
     borderRadius: 5,
     shadowColor: "#000",
     shadowOffset: {
@@ -518,7 +651,6 @@ const styles = StyleSheet.create({
   },
   modalView: {
     width: "90%",
-    // margin: 20,
     backgroundColor: "white",
     borderRadius: 20,
     padding: 20,
@@ -535,12 +667,12 @@ const styles = StyleSheet.create({
   button: {
     borderRadius: 5,
     padding: 10,
-    // elevation: 2,
     backgroundColor: "#2245ac",
     marginTop: 20,
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    width: "48%",
   },
   buttonOpen: {
     backgroundColor: "#F194FF",
@@ -569,7 +701,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   inforTicket: {
-    width: "90%",
+    width: "100%",
     backgroundColor: "#f1f4f5",
     padding: 10,
     borderRadius: 5,
@@ -585,25 +717,14 @@ const styles = StyleSheet.create({
   },
   ticketStatus: {
     width: "100%",
-    // backgroundColor: "#f1f4f5",
     marginTop: 20,
     padding: 10,
     borderRadius: 5,
     shadowColor: "#000",
-    // shadowOffset: {
-    //   width: 0,
-    //   height: 2,
-    // },
-    // shadowOpacity: 0.25,
-    // shadowRadius: 3.84,
-
-    // elevation: 5,
   },
   groupStatus: {
     width: "100%",
-    // backgroundColor: "#f1f4f5",
     marginTop: 20,
-    padding: 5,
     borderRadius: 5,
     shadowColor: "#000",
   },

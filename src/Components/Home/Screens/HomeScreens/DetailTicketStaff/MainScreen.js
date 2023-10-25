@@ -6,6 +6,7 @@ import {
   Text,
   TextInput,
   Pressable,
+  ScrollView,
   Modal,
   SafeAreaView,
 } from "react-native";
@@ -141,6 +142,32 @@ export default function DetailTicketStaff({ route, navigation }) {
       });
   };
 
+  const completeTicket = () => {
+    fetch(
+      `https://ndl-be-apphanhchinh.onrender.com/ticket/update/${inforTicket._id}`,
+      {
+        method: "POST",
+        headers: {
+          access_token: accessToken,
+          "Content-type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify({
+          status: "finished",
+          completedAt: new Date().toJSON(),
+          note: note,
+          reason: selectedReason,
+          time: selectedTime,
+        }),
+      }
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.code == 200) {
+          setRefesh(["complete"]);
+        }
+      });
+  };
+
   const handleShowImage = () => {
     const arr = [];
 
@@ -174,275 +201,525 @@ export default function DetailTicketStaff({ route, navigation }) {
           </Text>
         </View>
 
-        <View style={styles.body}>
-          <View style={styles.inforTicket}>
-            <Text>Người yêu cầu : </Text>
-            <View
-              style={{
-                width: "100%",
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-around",
-                marginTop: 10,
-                marginBottom: 10,
-              }}
-            >
-              {inforTicket != null ? (
-                renderUser(inforTicket.userID)
-              ) : (
-                <Text></Text>
-              )}
-            </View>
-
-            <View
-              style={{
-                width: "100%",
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                padding: 10,
-                marginTop: 10,
-                marginBottom: 10,
-              }}
-            >
-              <Text
+        <ScrollView>
+          <View style={styles.body}>
+            {/*xử lý hiển thị thông tin ticket*/}
+            <View style={{ ...styles.inforTicket }}>
+              <Text style={{ fontSize: 16, fontWeight: 700 }}>
+                Người yêu cầu :{" "}
+              </Text>
+              <View
                 style={{
-                  fontSize: 20,
-                  lineHeight: 21,
-                  fontFamily: "Poppins_500Medium_Italic",
-                  width: "35%",
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-around",
+                  marginTop: 10,
+                  marginBottom: 10,
                 }}
               >
-                Thời gian :
-              </Text>
-              {inforTicket != null ? (
-                <Text
-                  style={{
-                    fontWeight: 500,
-                    fontSize: 20,
-                    marginLeft: 10,
-                    width: "65%",
-                    lineHeight: 21,
-                  }}
-                >
-                  {moment(inforTicket.createdAt).format("hh:mm a")}
-                </Text>
-              ) : null}
-            </View>
+                {inforTicket != null ? (
+                  renderUser(inforTicket.userID)
+                ) : (
+                  <Text></Text>
+                )}
+              </View>
 
-            <View
-              style={{
-                width: "100%",
-                display: "flex",
-                flexDirection: "row",
-                marginTop: 10,
-                marginBottom: 10,
-                alignItems: "center",
-                padding: 10,
-              }}
-            >
-              <Text
+              <View
                 style={{
-                  fontSize: 20,
-                  lineHeight: 21,
-                  width: "35%",
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: 10,
+                  marginTop: 10,
+                  marginBottom: 10,
                 }}
               >
-                Phòng :
-              </Text>
-              {inforTicket != null ? (
                 <Text
                   style={{
-                    fontWeight: 500,
                     fontSize: 20,
-                    marginLeft: 10,
-                    flexShrink: 1,
                     lineHeight: 21,
-                    width: "65%",
+                    fontFamily: "Poppins_500Medium_Italic",
+                    width: "35%",
                   }}
                 >
-                  {inforTicket.room}
+                  Thời gian :
                 </Text>
-              ) : null}
-            </View>
-            <View
-              style={{
-                marginTop: 10,
-                marginBottom: 10,
-                width: "100%",
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "flex-start",
-                padding: 10,
-              }}
-            >
-              <Text style={{ fontSize: 20, lineHeight: 21, width: "35%" }}>
-                Mô tả sự cố :
-              </Text>
-              {inforTicket != null ? (
+                {inforTicket != null ? (
+                  <Text
+                    style={{
+                      fontWeight: 500,
+                      fontSize: 20,
+                      marginLeft: 10,
+                      width: "65%",
+                      lineHeight: 21,
+                    }}
+                  >
+                    {moment(inforTicket.createdAt).format("hh:mm a")}
+                  </Text>
+                ) : null}
+              </View>
+
+              <View
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "row",
+                  marginTop: 10,
+                  marginBottom: 10,
+                  alignItems: "center",
+                  padding: 10,
+                }}
+              >
                 <Text
                   style={{
-                    fontWeight: 500,
                     fontSize: 20,
-                    marginLeft: 10,
-                    flexShrink: 1,
                     lineHeight: 21,
-                    width: "65%",
+                    width: "35%",
                   }}
                 >
-                  {inforTicket.description}
+                  Phòng :
                 </Text>
-              ) : null}
+                {inforTicket != null ? (
+                  <Text
+                    style={{
+                      fontWeight: 500,
+                      fontSize: 20,
+                      marginLeft: 10,
+                      flexShrink: 1,
+                      lineHeight: 21,
+                      width: "65%",
+                    }}
+                  >
+                    {inforTicket.room}
+                  </Text>
+                ) : null}
+              </View>
+              <View
+                style={{
+                  marginTop: 10,
+                  marginBottom: 10,
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  padding: 10,
+                }}
+              >
+                <Text style={{ fontSize: 20, lineHeight: 21, width: "35%" }}>
+                  Mô tả sự cố :
+                </Text>
+                {inforTicket != null ? (
+                  <Text
+                    style={{
+                      fontWeight: 500,
+                      fontSize: 20,
+                      marginLeft: 10,
+                      flexShrink: 1,
+                      lineHeight: 21,
+                      width: "65%",
+                    }}
+                  >
+                    {inforTicket.description}
+                  </Text>
+                ) : null}
+              </View>
             </View>
-          </View>
+            {/*xử lý nút hiển thị hình ảnh*/}
+            {inforTicket != null ? (
+              inforTicket.status == "pending" ||
+              inforTicket.status == "processing" ? (
+                <Pressable
+                  onPress={() => setIsVisibleImages(true)}
+                  style={{
+                    backgroundColor: "grey",
+                    padding: 10,
+                    borderRadius: 5,
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name="folder-multiple-image"
+                    size={24}
+                    color="white"
+                  />
+                  <Text style={{ marginLeft: 10, color: "white" }}>
+                    Xem ảnh
+                  </Text>
+                </Pressable>
+              ) : null
+            ) : null}
+            {/*xử lý giao diện ở các trạng thái ticket khác nhau*/}
+            {inforTicket != null ? (
+              inforTicket.status == "processing" ? (
+                <>
+                  <View
+                    style={{
+                      width: "90%",
+                      display: "flex",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <View style={{ width: "58%" }}>
+                      <SelectList
+                        setSelected={(val) => setSelectedReason(val)}
+                        data={reason}
+                        maxHeight={150}
+                        defaultOption={{ key: "0", value: "Nguyên nhân lỗi" }}
+                        boxStyles={{
+                          marginTop: 20,
+                          maxWidth: "100%",
+                          minWidth: "100%",
+                          backgroundColor: "#f1f4f5",
+                          // padding: 10,
+                          borderRadius: 5,
+                          shadowColor: "#000",
+                          shadowOffset: {
+                            width: 0,
+                            height: 2,
+                          },
+                          shadowOpacity: 0.25,
+                          shadowRadius: 3.84,
 
-          <Pressable
-            onPress={() => setIsVisibleImages(true)}
-            style={{
-              backgroundColor: "grey",
-              padding: 10,
-              borderRadius: 5,
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-            }}
-          >
-            <MaterialCommunityIcons
-              name="folder-multiple-image"
-              size={24}
-              color="white"
-            />
-            <Text style={{ marginLeft: 10, color: "white" }}>Xem ảnh</Text>
-          </Pressable>
+                          elevation: 5,
+                          borderWidth: 0,
+                        }}
+                      />
+                    </View>
+                    <View style={{ width: "38%" }}>
+                      <SelectList
+                        setSelected={(val) => setSelectedTime(val)}
+                        data={time}
+                        maxHeight={150}
+                        defaultOption={{ key: "0", value: "Thời gian" }}
+                        boxStyles={{
+                          marginTop: 20,
+                          maxWidth: "100%",
+                          minWidth: "100%",
+                          backgroundColor: "#f1f4f5",
+                          // padding: 10,
+                          borderRadius: 5,
+                          shadowColor: "#000",
+                          shadowOffset: {
+                            width: 0,
+                            height: 2,
+                          },
+                          shadowOpacity: 0.25,
+                          shadowRadius: 3.84,
 
-          {inforTicket != null ? (
-            inforTicket.status == "processing" ? (
-              <>
+                          elevation: 5,
+                          borderWidth: 0,
+                        }}
+                      />
+                    </View>
+                  </View>
+                  <View
+                    style={{
+                      width: "90%",
+                      display: "flex",
+                    }}
+                  >
+                    <TextInput
+                      textAlignVertical="top"
+                      style={styles.input3}
+                      multiline={true}
+                      numberOfLines={7}
+                      placeholder="Ghi chú"
+                      value={note}
+                      onChangeText={(text) => setNote(text)}
+                    ></TextInput>
+                  </View>
+                </>
+              ) : inforTicket.status == "finished" ? (
                 <View
                   style={{
                     width: "90%",
+                    padding: 10,
+                    backgroundColor: "#f1f4f5",
+                    borderRadius: 5,
+                  }}
+                >
+                  <Text style={{ fontSize: 16, fontWeight: 700 }}>
+                    Trạng thái đã yêu cầu
+                  </Text>
+                  <View style={styles.groupStatus}>
+                    <View
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        marginBottom: 20,
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 50,
+                          height: 50,
+                          borderRadius: 50,
+                          backgroundColor: "#2d5381",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          marginRight: 20,
+                        }}
+                      >
+                        <AntDesign name="check" size={24} color="white" />
+                      </View>
+                      <View
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Text>Đã yêu cầu</Text>
+                        <Text>
+                          {inforTicket != null
+                            ? moment(inforTicket.createdAt).format("h:mm a")
+                            : ""}
+                        </Text>
+                      </View>
+                    </View>
+                    <View
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+
+                        marginTop: 20,
+                        marginBottom: 20,
+                      }}
+                    >
+                      <View
+                        style={
+                          inforTicket != null
+                            ? inforTicket.status == "pending"
+                              ? {
+                                  width: 50,
+                                  height: 50,
+                                  borderRadius: 50,
+                                  backgroundColor: "white",
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                  marginRight: 20,
+                                  borderColor: "#2d5381",
+                                  borderWidth: 2,
+                                }
+                              : {
+                                  width: 50,
+                                  height: 50,
+                                  borderRadius: 50,
+                                  backgroundColor: "#2d5381",
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                  marginRight: 20,
+                                }
+                            : null
+                        }
+                      >
+                        {inforTicket != null ? (
+                          inforTicket.status == "pending" ? (
+                            <Ionicons
+                              name="ios-reload-outline"
+                              size={24}
+                              color="black"
+                            />
+                          ) : (
+                            <AntDesign name="check" size={24} color="white" />
+                          )
+                        ) : null}
+                      </View>
+                      <View
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          // alignItems: "center",
+                        }}
+                      >
+                        <Text>Yêu cầu đã tiếp nhận</Text>
+                        <Text>
+                          {inforTicket != null
+                            ? inforTicket.status == "pending"
+                              ? "--:--"
+                              : moment(inforTicket.receivedAt).format("hh:mm a")
+                            : ""}
+                        </Text>
+                      </View>
+                    </View>
+                    <View
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        marginTop: 20,
+                      }}
+                    >
+                      <View
+                        style={
+                          inforTicket != null
+                            ? inforTicket.status == "pending" ||
+                              inforTicket.status == "processing"
+                              ? {
+                                  width: 50,
+                                  height: 50,
+                                  borderRadius: 50,
+                                  backgroundColor: "white",
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                  marginRight: 20,
+                                  borderColor: "#2d5381",
+                                  borderWidth: 2,
+                                }
+                              : {
+                                  width: 50,
+                                  height: 50,
+                                  borderRadius: 50,
+                                  backgroundColor: "#2d5381",
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                  marginRight: 20,
+                                }
+                            : null
+                        }
+                      >
+                        {inforTicket != null ? (
+                          inforTicket.status == "pending" ||
+                          inforTicket.status == "processing" ? (
+                            <Ionicons
+                              name="ios-reload-outline"
+                              size={24}
+                              color="black"
+                            />
+                          ) : (
+                            <AntDesign name="check" size={24} color="white" />
+                          )
+                        ) : (
+                          ""
+                        )}
+                      </View>
+                      <View
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Text>Yêu cầu đã hoàn thành</Text>
+                        <Text>
+                          {inforTicket != null
+                            ? inforTicket.status == "pending" ||
+                              inforTicket.status == "processing"
+                              ? "--:--"
+                              : moment(inforTicket.completedAt).format(
+                                  "hh:mm a"
+                                )
+                            : ""}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              ) : null
+            ) : null}
+            {/*Xử lý hiển thị phần đánh giá*/}
+            <View
+              style={{
+                width: "90%",
+                backgroundColor: "#f1f4f5",
+                padding: 20,
+                borderRadius: 5,
+                shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+
+                elevation: 5,
+                marginTop: 10,
+              }}
+            >
+              {inforTicket != null ? (
+                inforTicket.status == "pending" ||
+                inforTicket.status == "processing" ? null : (
+                  <View>
+                    <Text style={{ fontSize: 16, fontWeight: 700 }}>
+                      Nhận xét :
+                    </Text>
+                    {inforTicket.note != "" ? (
+                      <Text>{inforTicket.note}</Text>
+                    ) : (
+                      <Text>Chưa có nhận xét cho phiếu này</Text>
+                    )}
+                  </View>
+                )
+              ) : null}
+            </View>
+            {/*xử lý nút hiển thị ở các trạng thái ticket khác nhau*/}
+            {inforTicket != null ? (
+              inforTicket.status == "pending" ? (
+                <Pressable
+                  onPress={receiveTicket}
+                  style={{ ...styles.button, width: "90%" }}
+                >
+                  <Text
+                    style={{ color: "white", fontSize: 12, fontWeight: 700 }}
+                  >
+                    Tiếp Nhận
+                  </Text>
+                </Pressable>
+              ) : inforTicket.status == "processing" ? (
+                <View
+                  style={{
                     display: "flex",
+                    width: "90%",
                     flexDirection: "row",
                     justifyContent: "space-between",
                   }}
                 >
-                  <View style={{ width: "58%" }}>
-                    <SelectList
-                      setSelected={(val) => setSelectedReason(val)}
-                      data={reason}
-                      maxHeight={150}
-                      defaultOption={{ key: "0", value: "Nguyên nhân lỗi" }}
-                      boxStyles={{
-                        marginTop: 20,
-                        maxWidth: "100%",
-                        minWidth: "100%",
-                        backgroundColor: "#f1f4f5",
-                        // padding: 10,
-                        borderRadius: 5,
-                        shadowColor: "#000",
-                        shadowOffset: {
-                          width: 0,
-                          height: 2,
-                        },
-                        shadowOpacity: 0.25,
-                        shadowRadius: 3.84,
-
-                        elevation: 5,
-                        borderWidth: 0,
-                      }}
-                    />
-                  </View>
-                  <View style={{ width: "38%" }}>
-                    <SelectList
-                      setSelected={(val) => setSelectedTime(val)}
-                      data={time}
-                      maxHeight={150}
-                      defaultOption={{ key: "0", value: "Thời gian" }}
-                      boxStyles={{
-                        marginTop: 20,
-                        maxWidth: "100%",
-                        minWidth: "100%",
-                        backgroundColor: "#f1f4f5",
-                        // padding: 10,
-                        borderRadius: 5,
-                        shadowColor: "#000",
-                        shadowOffset: {
-                          width: 0,
-                          height: 2,
-                        },
-                        shadowOpacity: 0.25,
-                        shadowRadius: 3.84,
-
-                        elevation: 5,
-                        borderWidth: 0,
-                      }}
-                    />
-                  </View>
+                  <Pressable
+                    onPress={completeTicket}
+                    style={{ ...styles.button, backgroundColor: "#29d13a" }}
+                  >
+                    <Text
+                      style={{ color: "white", fontSize: 12, fontWeight: 700 }}
+                    >
+                      Hoàn thành
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={receiveTicket}
+                    style={{ ...styles.button, backgroundColor: "#ff2d2d" }}
+                  >
+                    <Text
+                      style={{ color: "white", fontSize: 12, fontWeight: 700 }}
+                    >
+                      Chưa xử lý được
+                    </Text>
+                  </Pressable>
                 </View>
-                <View
-                  style={{
-                    width: "90%",
-                    display: "flex",
-                  }}
-                >
-                  <TextInput
-                    textAlignVertical="top"
-                    style={styles.input3}
-                    multiline={true}
-                    numberOfLines={7}
-                    placeholder="Ghi chú"
-                    value={note}
-                    onChangeText={(text) => setNote(text)}
-                  ></TextInput>
-                </View>
-              </>
-            ) : null
-          ) : null}
-          {inforTicket != null ? (
-            inforTicket.status == "pending" ? (
-              <Pressable
-                onPress={receiveTicket}
-                style={{ ...styles.button, width: "90%" }}
-              >
-                <Text style={{ color: "white", fontSize: 12, fontWeight: 700 }}>
-                  Tiếp Nhận
-                </Text>
-              </Pressable>
-            ) : (
-              <View
-                style={{
-                  display: "flex",
-                  width: "90%",
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                }}
-              >
+              ) : (
                 <Pressable
                   onPress={receiveTicket}
-                  style={{ ...styles.button, backgroundColor: "#29d13a" }}
+                  style={{ ...styles.button, width: "90%" }}
                 >
                   <Text
                     style={{ color: "white", fontSize: 12, fontWeight: 700 }}
                   >
-                    Hoàn thành
+                    Trở về
                   </Text>
                 </Pressable>
-                <Pressable
-                  onPress={receiveTicket}
-                  style={{ ...styles.button, backgroundColor: "#ff2d2d" }}
-                >
-                  <Text
-                    style={{ color: "white", fontSize: 12, fontWeight: 700 }}
-                  >
-                    Chưa xử lý được
-                  </Text>
-                </Pressable>
-              </View>
-            )
-          ) : null}
-          {inforTicket != null ? handleShowImage() : null}
-        </View>
+              )
+            ) : null}
+
+            {inforTicket != null ? handleShowImage() : null}
+          </View>
+        </ScrollView>
       </View>
 
       {/* <Modal
@@ -536,8 +813,8 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "center",
     width: "100%",
+    paddingBottom: 100,
   },
-
   input: {
     marginTop: 20,
     width: "90%",
@@ -750,7 +1027,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
   },
   groupStatus: {
-    width: "100%",
+    width: "90%",
     marginTop: 20,
     padding: 5,
     borderRadius: 5,
