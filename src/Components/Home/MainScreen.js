@@ -76,6 +76,17 @@ export default function MainScreen({ route, navigation }) {
     }
   };
 
+  const checkLogin = async () => {
+    const isSignedIn = await GoogleSignin.isSignedIn();
+    if (isSignedIn == true) {
+      // navigation.navigate("Home");
+      console.log("Đã đăng nhập");
+    } else {
+      console.log("Đã đăng xuất");
+      navigation.navigate("Home");
+    }
+  };
+
   if (user != null) {
     if (user.role == null) {
       return (
@@ -164,19 +175,8 @@ export default function MainScreen({ route, navigation }) {
               initialParams={{
                 userID: userID,
                 accessToken: accessToken,
-                checkLogin: async () => {
-                  const isSignedIn = await GoogleSignin.isSignedIn();
-                  if (isSignedIn == true) {
-                    // navigation.navigate("Home");
-                    console.log("Đã đăng nhập");
-                  } else {
-                    console.log("Đã đăng xuất");
-                    navigation.navigate("Home");
-                  }
-                },
               }}
               name="SettingScreen"
-              component={MainSettingScreen}
               options={{
                 headerShown: false,
                 tabBarLabel: "Cài Đặt",
@@ -184,7 +184,14 @@ export default function MainScreen({ route, navigation }) {
                   <AntDesign name="setting" size={24} color={color} />
                 ),
               }}
-            />
+            >
+              {(props) => (
+                <MainSettingScreen
+                  {...props}
+                  checkLogin={checkLogin}
+                ></MainSettingScreen>
+              )}
+            </Tab.Screen>
             {user != null ? (
               user.role == "user" ? (
                 <Tab.Screen

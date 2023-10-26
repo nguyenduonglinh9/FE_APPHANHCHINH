@@ -10,8 +10,8 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 
-export default function SettingScreen({ route, navigation }) {
-  const { userID, accessToken, checkLogin } = route.params;
+export default function SettingScreen({ route, navigation, checkLogin }) {
+  const { userID, accessToken } = route.params;
   const [user, setUser] = useState();
   const [reload, setReload] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -24,7 +24,6 @@ export default function SettingScreen({ route, navigation }) {
     iosClientId:
       "307189795157-o2k4dt8m0fvfacgv69s9n3ra2i6nm4jt.apps.googleusercontent.com",
   });
-  console.log(reload);
 
   useEffect(() => {
     fetch(`https://ndl-be-apphanhchinh.onrender.com/user/${userID}`)

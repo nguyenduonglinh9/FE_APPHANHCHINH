@@ -8,6 +8,7 @@ import CreateTiket from "./CreateTicket/MainScreen";
 import DetailTicket from "./DetailTicket/MainScreen";
 import MainListTicketScreen from "./ListTicket/MainScreen";
 import DetailTicketStaff from "./DetailTicketStaff/MainScreen";
+import MainListBuildScreen from "./ListBuild/MainScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -56,6 +57,12 @@ export default function MainHomeScreen({ route, navigation }) {
             options={{ headerShown: false }}
             name="MainListTicketScreen"
             component={MainListTicketScreen}
+          />
+          <Stack.Screen
+            initialParams={{ userID: userID, accessToken: accessToken }}
+            options={{ headerShown: false }}
+            name="MainListBuildScreen"
+            component={MainListBuildScreen}
           />
         </Stack.Navigator>
       </View>

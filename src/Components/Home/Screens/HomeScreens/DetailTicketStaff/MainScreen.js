@@ -626,40 +626,45 @@ export default function DetailTicketStaff({ route, navigation }) {
               ) : null
             ) : null}
             {/*Xử lý hiển thị phần đánh giá*/}
-            <View
-              style={{
-                width: "90%",
-                backgroundColor: "#f1f4f5",
-                padding: 20,
-                borderRadius: 5,
-                shadowColor: "#000",
-                shadowOffset: {
-                  width: 0,
-                  height: 2,
-                },
-                shadowOpacity: 0.25,
-                shadowRadius: 3.84,
+            {inforTicket != null ? (
+              inforTicket.status == "finished" ? (
+                <View
+                  style={{
+                    width: "90%",
+                    backgroundColor: "#f1f4f5",
+                    padding: 20,
+                    borderRadius: 5,
+                    shadowColor: "#000",
+                    shadowOffset: {
+                      width: 0,
+                      height: 2,
+                    },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 3.84,
 
-                elevation: 5,
-                marginTop: 10,
-              }}
-            >
-              {inforTicket != null ? (
-                inforTicket.status == "pending" ||
-                inforTicket.status == "processing" ? null : (
-                  <View>
-                    <Text style={{ fontSize: 16, fontWeight: 700 }}>
-                      Nhận xét :
-                    </Text>
-                    {inforTicket.note != "" ? (
-                      <Text>{inforTicket.note}</Text>
-                    ) : (
-                      <Text>Chưa có nhận xét cho phiếu này</Text>
-                    )}
-                  </View>
-                )
-              ) : null}
-            </View>
+                    elevation: 5,
+                    marginTop: 10,
+                  }}
+                >
+                  {inforTicket != null ? (
+                    inforTicket.status == "pending" ||
+                    inforTicket.status == "processing" ? null : (
+                      <View>
+                        <Text style={{ fontSize: 16, fontWeight: 700 }}>
+                          Nhận xét :
+                        </Text>
+                        {inforTicket.note != "" ? (
+                          <Text>{inforTicket.note}</Text>
+                        ) : (
+                          <Text>Chưa có nhận xét cho phiếu này</Text>
+                        )}
+                      </View>
+                    )
+                  ) : null}
+                </View>
+              ) : null
+            ) : null}
+
             {/*xử lý nút hiển thị ở các trạng thái ticket khác nhau*/}
             {inforTicket != null ? (
               inforTicket.status == "pending" ? (

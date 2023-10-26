@@ -96,7 +96,10 @@ export default function HomeScreen({ route, navigation }) {
               Sự Cố Cần Hỗ Trợ
             </Text>
           </Pressable>
-          <View style={styles.button}>
+          <Pressable
+            onPress={() => navigation.navigate("MainListBuildScreen")}
+            style={styles.button}
+          >
             <View style={{ width: "30%" }}>
               <Image
                 style={{ height: 32, width: 32 }}
@@ -106,7 +109,7 @@ export default function HomeScreen({ route, navigation }) {
             <Text style={{ width: "70%", fontSize: 16, fontWeight: 500 }}>
               Tính Sẵn Sàng Phòng Học
             </Text>
-          </View>
+          </Pressable>
         </>
       );
     } else if (user.role == "admin") {

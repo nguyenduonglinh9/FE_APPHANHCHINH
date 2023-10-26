@@ -22,6 +22,7 @@ export default function DetailTicket({ route, navigation }) {
   const [inforTicket, setInforTicket] = useState();
   const [users, setUsers] = useState([]);
   const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
 
   useEffect(() => {
     fetch(`https://ndl-be-apphanhchinh.onrender.com/ticket/${idTicket}`, {
@@ -82,6 +83,27 @@ export default function DetailTicket({ route, navigation }) {
   };
 
   const handleChange = useCallback((value) => setRating(value), [rating]);
+
+  const handleUpdateTicket = () => {
+    fetch(
+      `https://ndl-be-apphanhchinh.onrender.com/ticket/update/${inforTicket._id}`,
+      {
+        method: "POST",
+        headers: {
+          access_token: accessToken,
+          "Content-type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify({
+          star: rating,
+          comment: comment,
+        }),
+      }
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+      });
+  };
 
   return (
     <View style={styles.container}>
@@ -371,8 +393,8 @@ export default function DetailTicket({ route, navigation }) {
               multiline={true}
               numberOfLines={7}
               placeholder="Lời nhận xét"
-              // value={note}
-              // onChangeText={(text) => setNote(text)}
+              value={comment}
+              onChangeText={(text) => setComment(text)}
             ></TextInput>
             <View
               style={{
@@ -390,7 +412,7 @@ export default function DetailTicket({ route, navigation }) {
               </Pressable>
               <Pressable
                 style={[styles.button, styles.buttonClose]}
-                onPress={() => setModalVisible(!modalVisible)}
+                onPress={() => handleUpdateTicket()}
               >
                 <Text style={styles.textStyle}>Gửi</Text>
               </Pressable>

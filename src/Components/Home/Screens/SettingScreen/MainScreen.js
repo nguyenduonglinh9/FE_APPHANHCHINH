@@ -13,8 +13,8 @@ import { useEffect } from "react";
 
 const Stack = createNativeStackNavigator();
 
-export default function MainHomeScreen({ route, navigation }) {
-  const { userID, accessToken, checkLogin } = route.params;
+export default function MainHomeScreen({ route, navigation, checkLogin }) {
+  const { userID, accessToken } = route.params;
   const MyTheme = {
     ...DefaultTheme,
     colors: {
@@ -33,16 +33,6 @@ export default function MainHomeScreen({ route, navigation }) {
       "307189795157-o2k4dt8m0fvfacgv69s9n3ra2i6nm4jt.apps.googleusercontent.com",
   });
 
-  isSignedIn = async () => {
-    // const isSignedIn = await GoogleSignin.isSignedIn();
-    // if (isSignedIn == true) {
-    //   console.log("Đã Đăng Nhập");
-    // } else {
-    //   console.log("Đã Đăng Xuất");
-    // }
-    console.log("Hello");
-  };
-  //   isSignedIn();
   return (
     <NavigationContainer theme={MyTheme} independent={true}>
       <View style={styles.container}>
@@ -56,8 +46,11 @@ export default function MainHomeScreen({ route, navigation }) {
             }}
             options={{ headerShown: false }}
             name="history"
-            component={SettingScreen}
-          />
+          >
+            {(props) => (
+              <SettingScreen {...props} checkLogin={checkLogin}></SettingScreen>
+            )}
+          </Stack.Screen>
         </Stack.Navigator>
       </View>
     </NavigationContainer>
