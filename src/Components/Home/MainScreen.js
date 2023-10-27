@@ -25,8 +25,9 @@ import {
   GoogleSigninButton,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
+import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
 
-const Tab = createBottomTabNavigator();
+const Tab = createMaterialBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 export default function MainScreen({ route, navigation }) {
@@ -146,16 +147,26 @@ export default function MainScreen({ route, navigation }) {
     } else {
       return (
         <NavigationContainer independent={true} theme={MyTheme}>
-          <Tab.Navigator>
+          <Tab.Navigator
+            shifting={true}
+            activeColor="black"
+            barStyle={{
+              height: 80,
+
+              backgroundColor: "#f4f0f7",
+              overflow: "hidden",
+              position: "absolute",
+            }}
+          >
             <Tab.Screen
               initialParams={{ userID: userID, accessToken: accessToken }}
               name="HomeScreen"
               component={MainHomeScreen}
               options={{
                 headerShown: false,
-                tabBarLabel: "Trang Chủ",
+                tabBarLabel: "Trang chủ",
                 tabBarIcon: ({ color, size }) => (
-                  <Feather name="home" size={size} color={color} />
+                  <Feather name="home" size={24} color={color} />
                 ),
               }}
             />

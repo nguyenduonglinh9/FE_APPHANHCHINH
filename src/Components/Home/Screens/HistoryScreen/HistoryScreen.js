@@ -13,7 +13,6 @@ import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { ScrollViewIndicator } from "@fanchenbao/react-native-scroll-indicator";
 import moment from "moment";
 
 const Tab = createBottomTabNavigator();
@@ -22,20 +21,19 @@ const Stack = createNativeStackNavigator();
 export default function HistoryScreen({ route, navigation }) {
   const { userID, accessToken } = route.params;
   const [user, setUser] = useState();
+  const [users, setUsers] = useState([]);
   const [tickets, setTickets] = useState([]);
-  const MyTheme = {
-    ...DefaultTheme,
-    colors: {
-      ...DefaultTheme.colors,
-      primary: "rgb(45, 83, 129)",
-      background: "#2d5381",
-      card: "rgb(244, 245, 242)",
-    },
-  };
+
   useEffect(() => {
     fetch(`https://ndl-be-apphanhchinh.onrender.com/user/${userID}`)
       .then((res) => res.json())
       .then((data) => setUser(data));
+  }, []);
+
+  useEffect(() => {
+    fetch(`https://ndl-be-apphanhchinh.onrender.com/user`)
+      .then((res) => res.json())
+      .then((data) => setUsers(data));
   }, []);
 
   useEffect(() => {
@@ -54,7 +52,11 @@ export default function HistoryScreen({ route, navigation }) {
     });
 
     if (filterTicket.length <= 0) {
-      return <Text>Bạn Chưa Tạo Bất Kì Phiếu Hỗ Trợ Nào !</Text>;
+      return (
+        <View>
+          <Text>Bạn Chưa Tạo Bất Kì Phiếu Hỗ Trợ Nào !</Text>;
+        </View>
+      );
     } else {
       return filterTicket.map((item, index) => {
         return (
@@ -68,11 +70,14 @@ export default function HistoryScreen({ route, navigation }) {
             <Text style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>
               {item.title}
             </Text>
-            <Text>
-              {item.status == "pending"
-                ? `Người tiếp nhận : Chưa tiếp nhận`
-                : null}
-            </Text>
+            <View>
+              {item.status == "pending" ? (
+                <View>Người tiếp nhận : Chưa tiếp nhận</View>
+              ) : (item.status == "processing" && users.length) ||
+                (item.status == "finished" && users.length > 0) ? (
+                renderUserProcessing(item.staffID)
+              ) : null}
+            </View>
             <View style={{ display: "flex", flexDirection: "row" }}>
               <Text style={{ marginRight: 10 }}>
                 {moment(item.createdAt).format("DD-MM-YYYY")}
@@ -82,10 +87,86 @@ export default function HistoryScreen({ route, navigation }) {
               </Text>
               <Text>Phòng : {item.room}</Text>
             </View>
+            <View
+              style={{
+                marginTop: 5,
+                width: "40%",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={
+                  item.star == ""
+                    ? {
+                        backgroundColor: "red",
+                        color: "white",
+                        padding: 5,
+                        borderRadius: 10,
+                        width: "100%",
+                        textAlign: "center",
+                      }
+                    : {
+                        backgroundColor: "green",
+                        color: "white",
+                        padding: 5,
+                        borderRadius: 10,
+                        width: "100%",
+                        textAlign: "center",
+                      }
+                }
+              >
+                {item.star == "" ? "chưa đánh giá" : "đã đánh giá"}
+              </Text>
+            </View>
           </Pressable>
         );
       });
     }
+  };
+
+  const renderUserProcessing = (staffID) => {
+    return users
+      .filter((item, index) => {
+        return item.googleID == staffID;
+      })
+      .map((item, index) => {
+        return (
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "row",
+            }}
+            key={index}
+          >
+            <View
+              style={{
+                width: "80%",
+                fontSize: 14,
+                fontWeight: 400,
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <Text>Người tiếp nhận: {item.name}</Text>
+            </View>
+            <View
+              style={{
+                width: "20%",
+                aspectRatio: "1/1",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "flex-end",
+              }}
+            >
+              <Image
+                style={{ width: "100%", height: "100%", borderRadius: 50 }}
+                source={{ uri: item.imageURL }}
+              ></Image>
+            </View>
+          </View>
+        );
+      });
   };
 
   return (
@@ -119,8 +200,21 @@ export default function HistoryScreen({ route, navigation }) {
           Lịch Sử
         </Text>
 
-        <ScrollView style={{ width: "90%" }}>
-          {tickets.length != 0 ? renderTicket() : null}
+        <ScrollView
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+        >
+          <View
+            style={{
+              height: "100%",
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              paddingBottom: 100,
+            }}
+          >
+            {tickets.length != 0 ? renderTicket() : null}
+          </View>
         </ScrollView>
       </View>
     </View>
@@ -141,7 +235,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     position: "relative",
-    paddingTop: 10,
     display: "flex",
     alignItems: "center",
   },

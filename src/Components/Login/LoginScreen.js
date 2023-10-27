@@ -24,8 +24,7 @@ export default function LoginScreen({ navigation }) {
   const [bgPress, setBgPress] = useState(false);
 
   GoogleSignin.configure({
-    scopes: ["https://www.googleapis.com/auth/drive.readonly"],
-
+    scopes: ["https://www.googleapis.com/auth/user.phonenumbers.read"],
     androidClientId:
       "307189795157-ffu87084ubfoge5rvuooedl206hho8qk.apps.googleusercontent.com",
     iosClientId:
@@ -36,7 +35,7 @@ export default function LoginScreen({ navigation }) {
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
-      console.log("Thông tin : " + userInfo);
+
       if (userInfo != null) {
         if (userInfo.user.email.indexOf("fpt.edu.vn") == -1) {
           setModalVisible(true);

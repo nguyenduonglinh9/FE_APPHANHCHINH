@@ -57,6 +57,20 @@ export default function DetailRoomScreen({ route, navigation }) {
     setRoom(newRoom);
   };
 
+  const handleChangeValueDesc = (key, val) => {
+    console.log(val);
+    const newAssets = room.assets.map((item, index) => {
+      if (index == key) {
+        item.desc = val;
+        return item;
+      } else {
+        return item;
+      }
+    });
+    const newRoom = Object.assign({}, room, { assets: newAssets });
+    setRoom(newRoom);
+  };
+
   const renderRoom = () => {
     return room.assets.map((item, index) => {
       return (
@@ -119,14 +133,7 @@ export default function DetailRoomScreen({ route, navigation }) {
               alignItems: "center",
             }}
           >
-            <Pressable
-              //   style={{
-              //     ...styles.checkbox,
-              //   }}
-              //   value={item.isExist}
-              //   onChange={() => handleChangeValue(index)}
-              onPress={() => handleChangeValue(index)}
-            >
+            <Pressable onPress={() => handleChangeValue(index)}>
               <Feather
                 style={!item.isExist ? { opacity: 0 } : { opacity: 1 }}
                 name="check"
@@ -146,7 +153,8 @@ export default function DetailRoomScreen({ route, navigation }) {
             }}
           >
             <TextInput
-              placeholder={item.desc == "" ? "Mô tả" : item.desc}
+              defaultValue={item.desc}
+              onChangeText={(val) => handleChangeValueDesc(index, val)}
             ></TextInput>
           </View>
         </View>

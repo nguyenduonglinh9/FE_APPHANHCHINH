@@ -43,8 +43,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     display: "flex",
-    width: Dimensions.get("window").width,
-    height: Dimensions.get("window").height,
+    flex: 1,
     backgroundColor: "#f0f0f0",
     position: "relative",
   },

@@ -14,6 +14,7 @@ import { launchCamera, launchImageLibrary } from "react-native-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import moment from "moment";
 import { Rating } from "@kolking/react-native-rating";
+import { CommonActions } from "@react-navigation/native";
 
 export default function DetailTicket({ route, navigation }) {
   const { accessToken, idTicket } = route.params;
@@ -110,6 +111,7 @@ export default function DetailTicket({ route, navigation }) {
       <View style={styles.content}>
         <View style={styles.header}>
           <AntDesign
+            onPress={() => navigation.dispatch(CommonActions.goBack())}
             style={{ position: "absolute", left: 10, top: 10 }}
             name="left"
             size={20}

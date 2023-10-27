@@ -9,6 +9,7 @@ import {
   TouchableHighlight,
   Dimensions,
   BackHandler,
+  ScrollView,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 
@@ -115,7 +116,10 @@ export default function HomeScreen({ route, navigation }) {
     } else if (user.role == "admin") {
       return (
         <>
-          <View style={styles.button}>
+          <Pressable
+            onPress={() => navigation.navigate("MainListStaffScreen")}
+            style={styles.button}
+          >
             <View style={{ width: "30%" }}>
               <Image
                 style={{ height: 32, width: 32 }}
@@ -125,7 +129,7 @@ export default function HomeScreen({ route, navigation }) {
             <Text style={{ width: "70%", fontSize: 16, fontWeight: 500 }}>
               Nhân Sự
             </Text>
-          </View>
+          </Pressable>
           <View style={styles.button}>
             <View style={{ width: "30%" }}>
               <Image
@@ -216,7 +220,18 @@ export default function HomeScreen({ route, navigation }) {
         >
           Dịch Vụ Trực Tuyến
         </Text>
-        {user != null ? viewUser(user) : null}
+        <ScrollView style={{ width: "100%" }}>
+          <View
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              paddingBottom: 30,
+            }}
+          >
+            {user != null ? viewUser(user) : null}
+          </View>
+        </ScrollView>
       </View>
     </View>
   );
@@ -236,7 +251,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     position: "relative",
-    paddingTop: 10,
+    // paddingTop: 10,
     display: "flex",
     alignItems: "center",
   },

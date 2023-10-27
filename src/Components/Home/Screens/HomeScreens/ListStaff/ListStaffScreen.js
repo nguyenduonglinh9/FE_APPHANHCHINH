@@ -23,7 +23,7 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 
-export default function ContactScreen() {
+export default function ListStaffScreen({ toDetailScreen }) {
   const [staff, setStaff] = useState([]);
   //get all staff
   useEffect(() => {
@@ -32,48 +32,63 @@ export default function ContactScreen() {
       .then((data) => setStaff(data));
   }, []);
 
-  const ItemStaff = ({ data }) => (
-    <View style={styles.item}>
-      <Image
-        style={{ width: 50, aspectRatio: "1/1", borderRadius: 50 }}
-        source={{ uri: data.imageURL }}
-      ></Image>
-      <Text style={{ fontSize: 14, fontWeight: 500 }}>{data.name}</Text>
-      <MaterialIcons name="keyboard-arrow-right" size={24} color="black" />
-    </View>
-  );
+  const renderStaff = (type) => {
+    return staff
+      .filter((item, index) => {
+        return item.employeeType == type;
+      })
+      .map((item, index) => {
+        return (
+          <Pressable
+            onPress={() => toDetailScreen(item.googleID)}
+            key={index}
+            style={styles.item}
+          >
+            <Image
+              style={{ width: 50, aspectRatio: "1/1", borderRadius: 50 }}
+              source={{ uri: item.imageURL }}
+            ></Image>
+            <Text style={{ fontSize: 14, fontWeight: 500 }}>{item.name}</Text>
+            <MaterialIcons
+              name="keyboard-arrow-right"
+              size={24}
+              color="black"
+            />
+          </Pressable>
+        );
+      });
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
-          {/* <MaterialIcons
-            style={{
-              position: "absolute",
-              left: 10,
-              top: "50%",
-            }}
-            name="keyboard-arrow-left"
-            size={24}
-            color="black"
-          /> */}
-          <Text style={{ fontWeight: 700, fontSize: 24 }}>Liên hệ</Text>
+          <Text style={{ fontWeight: 700, fontSize: 24 }}>
+            Danh sách nhân sự
+          </Text>
         </View>
         <View style={styles.list}>
           <Text
             style={{ padding: 10, opacity: 0.5, fontSize: 14, fontWeight: 600 }}
           >
-            Phòng kỹ thuật
+            Phòng sự cố
           </Text>
           {staff.length == 0 ? (
             <Text>Chưa có nhân viên</Text>
           ) : (
-            <FlatList
-              initialNumToRender={1}
-              data={staff}
-              renderItem={({ item }) => <ItemStaff data={item} />}
-              keyExtractor={(item) => item._id}
-            />
+            renderStaff((type = "baocaosuco"))
+          )}
+        </View>
+        <View style={styles.list}>
+          <Text
+            style={{ padding: 10, opacity: 0.5, fontSize: 14, fontWeight: 600 }}
+          >
+            Phòng công nghệ thông tin
+          </Text>
+          {staff.length == 0 ? (
+            <Text>Chưa có nhân viên</Text>
+          ) : (
+            renderStaff((type = "cntt"))
           )}
         </View>
       </View>
@@ -84,12 +99,11 @@ export default function ContactScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#2d5381",
     display: "flex",
     justifyContent: "flex-end",
   },
   content: {
-    height: "95%",
+    height: "100%",
     backgroundColor: "#fff",
     width: "100%",
   },
@@ -100,7 +114,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   list: {
-    // backgroundColor: "red",
     width: "100%",
     display: "flex",
   },
@@ -117,8 +130,4 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 10,
   },
-  //   title: {
-  //     fontSize: 14,
-  //     fontWeight: 500,
-  //   },
 });

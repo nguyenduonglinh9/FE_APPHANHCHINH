@@ -5,10 +5,12 @@ import {
   Pressable,
   Image,
   StyleSheet,
+  SafeAreaView,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import {
   Feather,
   FontAwesome,
@@ -21,11 +23,15 @@ import {
   GoogleSigninButton,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
-import ContactScreen from "./ContactScreen";
+import ListStaffScreen from "./ListStaffScreen";
+import ListRateScreen from "./ListRateScreen";
+import Constants from "expo-constants";
 
 const Stack = createNativeStackNavigator();
+const Tab = createMaterialTopTabNavigator();
 
-export default function MainContactScreen() {
+export default function TopTabsScreen({ route, navigation }) {
+  const { userID, accessToken } = route.params;
   const MyTheme = {
     ...DefaultTheme,
     colors: {
@@ -35,18 +41,35 @@ export default function MainContactScreen() {
       card: "rgb(244, 245, 242)",
     },
   };
+
+  const toDetailScreen = (id) => {
+    navigation.navigate("DetailRateScreen", { id: id });
+  };
+  const toDetailStaffScreen = (id) => {
+    navigation.navigate("DetailStaffScreen", { id: id });
+  };
   return (
     <NavigationContainer independent={true}>
-      <View style={styles.container}>
-        <View style={styles.header}></View>
-        <Stack.Navigator>
-          <Stack.Screen
-            options={{ headerShown: false }}
-            name="Contact"
-            component={ContactScreen}
-          />
-        </Stack.Navigator>
-      </View>
+      <Tab.Navigator style={{ marginTop: Constants.statusBarHeight }}>
+        <Tab.Screen
+          initialParams={{ userID: userID, accessToken: accessToken }}
+          options={{ headerShown: false }}
+          name="Nhân sự"
+        >
+          {(props) => (
+            <ListStaffScreen toDetailScreen={toDetailStaffScreen} {...props} />
+          )}
+        </Tab.Screen>
+        <Tab.Screen
+          initialParams={{ userID: userID, accessToken: accessToken }}
+          options={{ headerShown: false }}
+          name="Đánh giá"
+        >
+          {(props) => (
+            <ListRateScreen toDetailScreen={toDetailScreen} {...props} />
+          )}
+        </Tab.Screen>
+      </Tab.Navigator>
     </NavigationContainer>
   );
 }
