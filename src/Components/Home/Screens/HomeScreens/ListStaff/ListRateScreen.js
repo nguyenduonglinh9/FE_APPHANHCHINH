@@ -83,7 +83,7 @@ export default function ListRateScreen({ route, navigation, toDetailScreen }) {
         return (
           <Pressable
             onPress={() => toDetailScreen(item._id)}
-            key={index}
+            key={item._id}
             style={{
               display: "flex",
               flexDirection: "row",

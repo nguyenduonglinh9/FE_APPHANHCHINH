@@ -34,15 +34,6 @@ export default function MainScreen({ route, navigation }) {
   const { userID, accessToken } = route.params;
   const [user, setUser] = useState();
 
-  GoogleSignin.configure({
-    scopes: ["https://www.googleapis.com/auth/drive.readonly"],
-
-    androidClientId:
-      "307189795157-ffu87084ubfoge5rvuooedl206hho8qk.apps.googleusercontent.com",
-    iosClientId:
-      "307189795157-o2k4dt8m0fvfacgv69s9n3ra2i6nm4jt.apps.googleusercontent.com",
-  });
-
   const MyTheme = {
     ...DefaultTheme,
     colors: {
@@ -63,10 +54,16 @@ export default function MainScreen({ route, navigation }) {
   });
 
   useEffect(() => {
-    fetch(`https://ndl-be-apphanhchinh.onrender.com/user/${userID}`)
+    fetch(`https://ndl-be-apphanhchinh.onrender.com/user/${userID}`, {
+      headers: {
+        access_token: accessToken,
+      },
+    })
       .then((res) => res.json())
       .then((data) => setUser(data));
   }, []);
+
+  console.log(user);
 
   const signOut = async () => {
     try {

@@ -37,7 +37,11 @@ export default function HomeScreen({ route, navigation }) {
   }, []);
 
   useEffect(() => {
-    fetch(`https://ndl-be-apphanhchinh.onrender.com/user/${userID}`)
+    fetch(`https://ndl-be-apphanhchinh.onrender.com/user/${userID}`, {
+      headers: {
+        access_token: accessToken,
+      },
+    })
       .then((res) => res.json())
       .then((data) => setUser(data));
   }, []);

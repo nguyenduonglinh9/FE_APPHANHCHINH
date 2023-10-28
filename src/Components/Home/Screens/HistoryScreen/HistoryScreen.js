@@ -9,14 +9,7 @@ import {
   Pressable,
 } from "react-native";
 import React, { useState, useEffect } from "react";
-import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Feather } from "@expo/vector-icons";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import moment from "moment";
-
-const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
 
 export default function HistoryScreen({ route, navigation }) {
   const { userID, accessToken } = route.params;
@@ -25,13 +18,21 @@ export default function HistoryScreen({ route, navigation }) {
   const [tickets, setTickets] = useState([]);
 
   useEffect(() => {
-    fetch(`https://ndl-be-apphanhchinh.onrender.com/user/${userID}`)
+    fetch(`https://ndl-be-apphanhchinh.onrender.com/user/${userID}`, {
+      headers: {
+        access_token: accessToken,
+      },
+    })
       .then((res) => res.json())
       .then((data) => setUser(data));
   }, []);
 
   useEffect(() => {
-    fetch(`https://ndl-be-apphanhchinh.onrender.com/user`)
+    fetch(`https://ndl-be-apphanhchinh.onrender.com/user`, {
+      headers: {
+        access_token: accessToken,
+      },
+    })
       .then((res) => res.json())
       .then((data) => setUsers(data));
   }, []);
@@ -45,6 +46,50 @@ export default function HistoryScreen({ route, navigation }) {
       .then((res) => res.json())
       .then((data) => setTickets(data));
   }, []);
+
+  const renderUserProcessing = (staffID) => {
+    return users
+      .filter((item, index) => {
+        return item.googleID == staffID;
+      })
+      .map((item, index) => {
+        return (
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "row",
+            }}
+            key={index}
+          >
+            <View
+              style={{
+                width: "80%",
+                fontSize: 14,
+                fontWeight: 400,
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <Text>Người tiếp nhận: {item.name}</Text>
+            </View>
+            <View
+              style={{
+                width: "20%",
+                aspectRatio: "1/1",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "flex-end",
+              }}
+            >
+              <Image
+                style={{ width: "100%", height: "100%", borderRadius: 50 }}
+                source={{ uri: item.imageURL }}
+              ></Image>
+            </View>
+          </View>
+        );
+      });
+  };
 
   const renderTicket = () => {
     const filterTicket = tickets.filter((item, index) => {
@@ -72,8 +117,8 @@ export default function HistoryScreen({ route, navigation }) {
             </Text>
             <View>
               {item.status == "pending" ? (
-                <View>Người tiếp nhận : Chưa tiếp nhận</View>
-              ) : (item.status == "processing" && users.length) ||
+                <Text>Người tiếp nhận : Chưa tiếp nhận</Text>
+              ) : (item.status == "processing" && users.length > 0) ||
                 (item.status == "finished" && users.length > 0) ? (
                 renderUserProcessing(item.staffID)
               ) : null}
@@ -123,50 +168,6 @@ export default function HistoryScreen({ route, navigation }) {
         );
       });
     }
-  };
-
-  const renderUserProcessing = (staffID) => {
-    return users
-      .filter((item, index) => {
-        return item.googleID == staffID;
-      })
-      .map((item, index) => {
-        return (
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-            }}
-            key={index}
-          >
-            <View
-              style={{
-                width: "80%",
-                fontSize: 14,
-                fontWeight: 400,
-                display: "flex",
-                justifyContent: "center",
-              }}
-            >
-              <Text>Người tiếp nhận: {item.name}</Text>
-            </View>
-            <View
-              style={{
-                width: "20%",
-                aspectRatio: "1/1",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "flex-end",
-              }}
-            >
-              <Image
-                style={{ width: "100%", height: "100%", borderRadius: 50 }}
-                source={{ uri: item.imageURL }}
-              ></Image>
-            </View>
-          </View>
-        );
-      });
   };
 
   return (

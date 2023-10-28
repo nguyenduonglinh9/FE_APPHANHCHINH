@@ -23,11 +23,16 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 
-export default function ListStaffScreen({ toDetailScreen }) {
+export default function ListStaffScreen({ toDetailScreen, route, navigation }) {
   const [staff, setStaff] = useState([]);
+  const { userID, accessToken } = route.params;
   //get all staff
   useEffect(() => {
-    fetch("https://ndl-be-apphanhchinh.onrender.com/user/staff")
+    fetch("https://ndl-be-apphanhchinh.onrender.com/user/staff", {
+      headers: {
+        access_token: accessToken,
+      },
+    })
       .then((res) => res.json())
       .then((data) => setStaff(data));
   }, []);

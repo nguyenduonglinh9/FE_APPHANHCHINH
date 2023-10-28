@@ -1,8 +1,8 @@
 diff --git a/node_modules/react-native/index.js b/node_modules/react-native/index.js
-index 7149c64..e6c6422 100644
+index 7149c64..1f399dc 100644
 --- a/node_modules/react-native/index.js
 +++ b/node_modules/react-native/index.js
-@@ -380,43 +380,18 @@ module.exports = {
+@@ -380,43 +380,19 @@ module.exports = {
    },
    // Deprecated Prop Types
    get ColorPropType(): $FlowFixMe {
@@ -13,6 +13,7 @@ index 7149c64..e6c6422 100644
 -        'continue using ColorPropType, migrate to the ' +
 -        "'deprecated-react-native-prop-types' package.",
 -    );
++    
      return require('deprecated-react-native-prop-types').ColorPropType;
    },
    get EdgeInsetsPropType(): $FlowFixMe {
@@ -23,7 +24,7 @@ index 7149c64..e6c6422 100644
 -        'continue using EdgeInsetsPropType, migrate to the ' +
 -        "'deprecated-react-native-prop-types' package.",
 -    );
-+    
++   
      return require('deprecated-react-native-prop-types').EdgeInsetsPropType;
    },
    get PointPropType(): $FlowFixMe {
@@ -45,7 +46,7 @@ index 7149c64..e6c6422 100644
 -        'continue using ViewPropTypes, migrate to the ' +
 -        "'deprecated-react-native-prop-types' package.",
 -    );
-+    
++   
      return require('deprecated-react-native-prop-types').ViewPropTypes;
    },
  };

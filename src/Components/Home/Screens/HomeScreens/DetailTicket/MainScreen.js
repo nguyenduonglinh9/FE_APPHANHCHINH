@@ -335,14 +335,14 @@ export default function DetailTicket({ route, navigation }) {
             {inforTicket != null ? (
               inforTicket.status == "pending" ||
               inforTicket.status == "processing" ? (
-                <Pressable style={styles.button}>
+                <Pressable style={{ ...styles.button, width: "100%" }}>
                   <Text
                     style={{ color: "white", fontSize: 12, fontWeight: 700 }}
                   >
                     Trở Về
                   </Text>
                 </Pressable>
-              ) : (
+              ) : inforTicket.status == "finished" && inforTicket.star == "" ? (
                 <Pressable
                   onPress={() => setModalVisible(true)}
                   style={{ ...styles.button, width: "100%" }}
@@ -353,6 +353,40 @@ export default function DetailTicket({ route, navigation }) {
                     Đánh giá
                   </Text>
                 </Pressable>
+              ) : (
+                <View
+                  style={{
+                    backgroundColor: "#f1f4f5",
+                    marginTop: 20,
+                    padding: 20,
+                    borderRadius: 10,
+                    display: "flex",
+                    flexDirection: "row",
+                    width: "100%",
+                  }}
+                >
+                  <View style={{ width: "80%" }}>
+                    <Text style={{ fontSize: 14, fontWeight: 400 }}>
+                      {inforTicket.comment}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text>{inforTicket.star}</Text>
+                    <AntDesign
+                      style={{ marginLeft: 5 }}
+                      name="star"
+                      size={24}
+                      color="#f0d440"
+                    />
+                  </View>
+                </View>
               )
             ) : null}
           </View>

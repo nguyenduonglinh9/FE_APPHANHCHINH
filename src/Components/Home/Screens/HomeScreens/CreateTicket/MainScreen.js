@@ -13,6 +13,16 @@ import { Feather, AntDesign } from "@expo/vector-icons";
 import { launchCamera, launchImageLibrary } from "react-native-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SelectList } from "react-native-dropdown-select-list";
+import LottieView from "lottie-react-native";
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+} from "@gorhom/bottom-sheet";
+import {
+  GestureHandlerRootView,
+  ScrollView,
+} from "react-native-gesture-handler";
+import Constants from "expo-constants";
 
 export default function CreateTiket({ route, navigation }) {
   const { type, userID, accessToken } = route.params;
@@ -29,6 +39,10 @@ export default function CreateTiket({ route, navigation }) {
   const [selectedBuild, setSelectedBuild] = useState("");
   const [rooms, setRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const BottomSheetModalRef = useRef(null);
+  const snapPoints = ["90%"];
 
   const listProblem = [
     "Cơ Sở Vật Chất",
@@ -121,7 +135,15 @@ export default function CreateTiket({ route, navigation }) {
       maxWidth: 2000,
     };
     const response = await launchImageLibrary(options);
-    setImagePicker((imagePicker) => [...imagePicker, response.assets[0]]);
+    if (response.didCancel) {
+      console.log("User cancelled image picker");
+    } else if (response.error) {
+      console.log("ImagePicker Error: ", response.error);
+    } else if (response.customButton) {
+      console.log("User tapped custom button: ", response.customButton);
+    } else {
+      setImagePicker((imagePicker) => [...imagePicker, response.assets[0]]);
+    }
   };
 
   const handleCameraLaunch = async () => {
@@ -132,7 +154,16 @@ export default function CreateTiket({ route, navigation }) {
       maxWidth: 2000,
     };
     const response = await launchCamera(options);
-    setImagePicker((imagePicker) => [...imagePicker, response.assets[0]]);
+
+    if (response.didCancel) {
+      console.log("User cancelled image picker");
+    } else if (response.error) {
+      console.log("ImagePicker Error: ", response.error);
+    } else if (response.customButton) {
+      console.log("User tapped custom button: ", response.customButton);
+    } else {
+      setImagePicker((imagePicker) => [...imagePicker, response.assets[0]]);
+    }
   };
 
   function showImages() {
@@ -152,10 +183,6 @@ export default function CreateTiket({ route, navigation }) {
       });
     }
   }
-
-  const showModalImage = () => {
-    setModalVisible(true);
-  };
 
   const showAllImage = () => {
     if (imagePicker.length == 0) {
@@ -198,6 +225,7 @@ export default function CreateTiket({ route, navigation }) {
       setError("Vui lòng chọn loại sự cố đang gặp");
       setModalVisible2(true);
     } else {
+      setModalVisible(true);
       var formData = new FormData();
       imagePicker.map((item, index) => {
         formData.append("images", {
@@ -253,6 +281,7 @@ export default function CreateTiket({ route, navigation }) {
               .then((res) => res.json())
               .then((data) => {
                 if (data.code == 200) {
+                  setModalVisible(false);
                   navigation.navigate("DetailTicket", {
                     idTicket: data.infor._id,
                   });
@@ -262,9 +291,12 @@ export default function CreateTiket({ route, navigation }) {
         });
     }
   };
+  const handelPresentModal = () => {
+    BottomSheetModalRef.current?.present();
+  };
 
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
           <AntDesign
@@ -403,7 +435,7 @@ export default function CreateTiket({ route, navigation }) {
           <View style={styles.imgShow}>
             {showImages()}
             <Pressable
-              onPress={showModalImage}
+              onPress={handelPresentModal}
               style={
                 imagePicker.length != 0
                   ? imagePicker.length >= 3
@@ -427,18 +459,15 @@ export default function CreateTiket({ route, navigation }) {
         </View>
       </View>
 
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => {
-          Alert.alert("Modal has been closed.");
-          setModalVisible(!modalVisible);
-        }}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalText}>Danh Sách Hình Ảnh</Text>
+      <BottomSheetModalProvider>
+        <ScrollView>
+          <BottomSheetModal
+            ref={BottomSheetModalRef}
+            index={0}
+            snapPoints={snapPoints}
+            containerStyle={{ backgroundColor: "#00000090" }}
+            style={{ padding: 20 }}
+          >
             <View
               style={{
                 display: "flex",
@@ -452,15 +481,9 @@ export default function CreateTiket({ route, navigation }) {
             >
               {imagePicker.length != 0 ? showAllImage() : null}
             </View>
-            <Pressable
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => setModalVisible(!modalVisible)}
-            >
-              <Text style={styles.textStyle}>Đóng</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+          </BottomSheetModal>
+        </ScrollView>
+      </BottomSheetModalProvider>
 
       <Modal
         animationType="slide"
@@ -468,7 +491,7 @@ export default function CreateTiket({ route, navigation }) {
         visible={modalVisible2}
         onRequestClose={() => {
           Alert.alert("Modal has been closed.");
-          setModalVisible(!modalVisible2);
+          setModalVisible2(!modalVisible2);
         }}
       >
         <View style={styles.centeredView}>
@@ -483,7 +506,20 @@ export default function CreateTiket({ route, navigation }) {
           </View>
         </View>
       </Modal>
-    </View>
+
+      <Modal animationType="slide" transparent={true} visible={modalVisible}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <LottieView
+              source={require("../../../../../../assets/lotties/loading.json")}
+              autoPlay
+              loop
+              style={{ width: 100, height: 100 }}
+            ></LottieView>
+          </View>
+        </View>
+      </Modal>
+    </GestureHandlerRootView>
   );
 }
 
@@ -503,6 +539,7 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
     paddingRight: 15,
     paddingLeft: 15,
+    marginTop: Constants.statusBarHeight,
   },
   header: {
     display: "flex",
@@ -679,6 +716,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 22,
+    backgroundColor: "#00000070",
   },
   modalView: {
     width: "90%",
