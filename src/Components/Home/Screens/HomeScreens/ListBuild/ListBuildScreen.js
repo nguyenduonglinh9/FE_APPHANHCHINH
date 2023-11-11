@@ -23,7 +23,7 @@ import {
 var randomColor = require("randomcolor");
 
 export default function ListBuildScreen({ route, navigation }) {
-  const { accessToken, userID } = route.params;
+  const { accessToken, userID, handleBack } = route.params;
   const [builds, setBuilds] = useState([]);
 
   useEffect(() => {
@@ -112,7 +112,12 @@ export default function ListBuildScreen({ route, navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <MaterialIcons name="keyboard-arrow-left" size={24} color="black" />
+        <MaterialIcons
+          onPress={() => handleBack()}
+          name="keyboard-arrow-left"
+          size={24}
+          color="black"
+        />
         <Text style={{ fontSize: 16, fontWeight: 600 }}>
           Kiểm tra tính sẵn phòng học
         </Text>

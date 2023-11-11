@@ -99,7 +99,7 @@ export default function HistoryScreen({ route, navigation }) {
     if (filterTicket.length <= 0) {
       return (
         <View>
-          <Text>Bạn Chưa Tạo Bất Kì Phiếu Hỗ Trợ Nào !</Text>;
+          <Text>Bạn chưa tạo phiếu nào</Text>;
         </View>
       );
     } else {
@@ -202,6 +202,7 @@ export default function HistoryScreen({ route, navigation }) {
         </Text>
 
         <ScrollView
+          style={{ width: "100%" }}
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
         >

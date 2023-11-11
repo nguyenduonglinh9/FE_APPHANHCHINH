@@ -10,20 +10,30 @@ import {
 } from "react-native";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Feather, AntDesign, Ionicons } from "@expo/vector-icons";
-import { launchCamera, launchImageLibrary } from "react-native-image-picker";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import moment from "moment";
 import { Rating } from "@kolking/react-native-rating";
 import { CommonActions } from "@react-navigation/native";
+import LottieView from "lottie-react-native";
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+} from "@gorhom/bottom-sheet";
+import {
+  GestureHandlerRootView,
+  ScrollView,
+} from "react-native-gesture-handler";
 
 export default function DetailTicket({ route, navigation }) {
   const { accessToken, idTicket } = route.params;
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalVisible2, setModalVisible2] = useState(false);
   const [inforTicket, setInforTicket] = useState();
   const [users, setUsers] = useState([]);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [refesh, setRefesh] = useState(false);
+
+  const BottomSheetModalRef = useRef(null);
+  const snapPoints = ["90%"];
 
   useEffect(() => {
     fetch(`https://ndl-be-apphanhchinh.onrender.com/ticket/${idTicket}`, {
@@ -33,7 +43,7 @@ export default function DetailTicket({ route, navigation }) {
     })
       .then((res) => res.json())
       .then((data) => setInforTicket(data));
-  }, []);
+  }, [refesh]);
 
   useEffect(() => {
     fetch("https://ndl-be-apphanhchinh.onrender.com/user", {
@@ -86,6 +96,8 @@ export default function DetailTicket({ route, navigation }) {
   const handleChange = useCallback((value) => setRating(value), [rating]);
 
   const handleUpdateTicket = () => {
+    setModalVisible(true);
+
     fetch(
       `https://ndl-be-apphanhchinh.onrender.com/ticket/update/${inforTicket._id}`,
       {
@@ -102,12 +114,19 @@ export default function DetailTicket({ route, navigation }) {
     )
       .then((res) => res.json())
       .then((data) => {
-        console.log(data);
+        if (data.code == 200) {
+          setModalVisible(false);
+          setRefesh(!refesh);
+        }
       });
   };
 
+  const handelPresentModal = () => {
+    BottomSheetModalRef.current?.present();
+  };
+
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
           <AntDesign
@@ -121,289 +140,302 @@ export default function DetailTicket({ route, navigation }) {
             Yêu Cầu Hỗ Trợ CNTT
           </Text>
         </View>
-        <View style={styles.body}>
-          <View style={styles.inforTicket}>
-            <Text style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>
-              {inforTicket != null && users.length > 0
-                ? inforTicket.title
-                : null}
-            </Text>
-            <View
-              style={{
-                marginBottom: 5,
-                display: "flex",
-                flexDirection: "row",
-
-                alignItems: "center",
-                justifyContent: "space-between",
-                position: "relative",
-              }}
-            >
-              <Text style={{ width: "30%" }}>Người tiếp nhận : </Text>
-              {inforTicket != null ? renderNameStaff() : null}
-            </View>
-            <View style={{ display: "flex", flexDirection: "row" }}>
-              <Text style={{ marginBottom: 5, marginRight: 10 }}>
-                {inforTicket != null
-                  ? moment(inforTicket.createdAt).format("DD-MM-YYYY")
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
+        >
+          <View style={styles.body}>
+            <View style={styles.inforTicket}>
+              <Text style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>
+                {inforTicket != null && users.length > 0
+                  ? inforTicket.title
                   : null}
               </Text>
-              <Text style={{ marginBottom: 5 }}>
-                {inforTicket != null
-                  ? moment(inforTicket.createdAt).format("h:mm a")
-                  : null}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.ticketStatus}>
-            <Text style={{ fontSize: 16, fontWeight: 700 }}>
-              Trạng Thái Yêu Cầu
-            </Text>
-            <View style={styles.groupStatus}>
               <View
                 style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  marginBottom: 20,
-                }}
-              >
-                <View
-                  style={{
-                    width: 50,
-                    height: 50,
-                    borderRadius: 50,
-                    backgroundColor: "#2d5381",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    marginRight: 20,
-                  }}
-                >
-                  <AntDesign name="check" size={24} color="white" />
-                </View>
-                <View
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text>Đã yêu cầu</Text>
-                  <Text>
-                    {inforTicket != null
-                      ? moment(inforTicket.createdAt).format("h:mm a")
-                      : ""}
-                  </Text>
-                </View>
-              </View>
-              <View
-                style={{
+                  marginBottom: 5,
                   display: "flex",
                   flexDirection: "row",
 
-                  marginTop: 20,
-                  marginBottom: 20,
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  position: "relative",
                 }}
               >
-                <View
-                  style={
-                    inforTicket != null
-                      ? inforTicket.status == "pending"
-                        ? {
-                            width: 50,
-                            height: 50,
-                            borderRadius: 50,
-                            backgroundColor: "white",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            marginRight: 20,
-                            borderColor: "#2d5381",
-                            borderWidth: 2,
-                          }
-                        : {
-                            width: 50,
-                            height: 50,
-                            borderRadius: 50,
-                            backgroundColor: "#2d5381",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            marginRight: 20,
-                          }
-                      : null
-                  }
-                >
-                  {inforTicket != null ? (
-                    inforTicket.status == "pending" ? (
-                      <Ionicons
-                        name="ios-reload-outline"
-                        size={24}
-                        color="black"
-                      />
-                    ) : (
-                      <AntDesign name="check" size={24} color="white" />
-                    )
-                  ) : null}
-                </View>
-                <View
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    // alignItems: "center",
-                  }}
-                >
-                  <Text>Yêu cầu đã tiếp nhận</Text>
-                  <Text>
-                    {inforTicket != null
-                      ? inforTicket.status == "pending"
-                        ? "--:--"
-                        : moment(inforTicket.receivedAt).format("hh:mm a")
-                      : ""}
-                  </Text>
-                </View>
+                <Text style={{ width: "30%" }}>Người tiếp nhận : </Text>
+                {inforTicket != null ? renderNameStaff() : null}
               </View>
-              <View
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  marginTop: 20,
-                }}
-              >
-                <View
-                  style={
-                    inforTicket != null
-                      ? inforTicket.status == "pending" ||
-                        inforTicket.status == "processing"
-                        ? {
-                            width: 50,
-                            height: 50,
-                            borderRadius: 50,
-                            backgroundColor: "white",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            marginRight: 20,
-                            borderColor: "#2d5381",
-                            borderWidth: 2,
-                          }
-                        : {
-                            width: 50,
-                            height: 50,
-                            borderRadius: 50,
-                            backgroundColor: "#2d5381",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            marginRight: 20,
-                          }
-                      : null
-                  }
-                >
-                  {inforTicket != null ? (
-                    inforTicket.status == "pending" ||
-                    inforTicket.status == "processing" ? (
-                      <Ionicons
-                        name="ios-reload-outline"
-                        size={24}
-                        color="black"
-                      />
-                    ) : (
-                      <AntDesign name="check" size={24} color="white" />
-                    )
-                  ) : (
-                    ""
-                  )}
-                </View>
-                <View
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text>Yêu cầu đã hoàn thành</Text>
-                  <Text>
-                    {inforTicket != null
-                      ? inforTicket.status == "pending" ||
-                        inforTicket.status == "processing"
-                        ? "--:--"
-                        : moment(inforTicket.completedAt).format("hh:mm a")
-                      : ""}
-                  </Text>
-                </View>
+              <View style={{ display: "flex", flexDirection: "row" }}>
+                <Text style={{ marginBottom: 5, marginRight: 10 }}>
+                  {inforTicket != null
+                    ? moment(inforTicket.createdAt).format("DD-MM-YYYY")
+                    : null}
+                </Text>
+                <Text style={{ marginBottom: 5 }}>
+                  {inforTicket != null
+                    ? moment(inforTicket.createdAt).format("h:mm a")
+                    : null}
+                </Text>
               </View>
             </View>
-            {inforTicket != null ? (
-              inforTicket.status == "pending" ||
-              inforTicket.status == "processing" ? (
-                <Pressable style={{ ...styles.button, width: "100%" }}>
-                  <Text
-                    style={{ color: "white", fontSize: 12, fontWeight: 700 }}
-                  >
-                    Trở Về
-                  </Text>
-                </Pressable>
-              ) : inforTicket.status == "finished" && inforTicket.star == "" ? (
-                <Pressable
-                  onPress={() => setModalVisible(true)}
-                  style={{ ...styles.button, width: "100%" }}
-                >
-                  <Text
-                    style={{ color: "white", fontSize: 12, fontWeight: 700 }}
-                  >
-                    Đánh giá
-                  </Text>
-                </Pressable>
-              ) : (
+            <View style={styles.ticketStatus}>
+              <Text style={{ fontSize: 16, fontWeight: 700 }}>
+                Trạng Thái Yêu Cầu
+              </Text>
+              <View style={styles.groupStatus}>
                 <View
                   style={{
-                    backgroundColor: "#f1f4f5",
-                    marginTop: 20,
-                    padding: 20,
-                    borderRadius: 10,
                     display: "flex",
                     flexDirection: "row",
-                    width: "100%",
+                    marginBottom: 20,
                   }}
                 >
-                  <View style={{ width: "80%" }}>
-                    <Text style={{ fontSize: 14, fontWeight: 400 }}>
-                      {inforTicket.comment}
-                    </Text>
+                  <View
+                    style={{
+                      width: 50,
+                      height: 50,
+                      borderRadius: 50,
+                      backgroundColor: "#2d5381",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      marginRight: 20,
+                    }}
+                  >
+                    <AntDesign name="check" size={24} color="white" />
                   </View>
                   <View
                     style={{
                       display: "flex",
-                      flexDirection: "row",
-
-                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    <Text>{inforTicket.star}</Text>
-                    <AntDesign
-                      style={{ marginLeft: 5 }}
-                      name="star"
-                      size={24}
-                      color="#f0d440"
-                    />
+                    <Text>Đã yêu cầu</Text>
+                    <Text>
+                      {inforTicket != null
+                        ? moment(inforTicket.createdAt).format("h:mm a")
+                        : ""}
+                    </Text>
                   </View>
                 </View>
-              )
-            ) : null}
+                <View
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+
+                    marginTop: 20,
+                    marginBottom: 20,
+                  }}
+                >
+                  <View
+                    style={
+                      inforTicket != null
+                        ? inforTicket.status == "pending"
+                          ? {
+                              width: 50,
+                              height: 50,
+                              borderRadius: 50,
+                              backgroundColor: "white",
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              marginRight: 20,
+                              borderColor: "#2d5381",
+                              borderWidth: 2,
+                            }
+                          : {
+                              width: 50,
+                              height: 50,
+                              borderRadius: 50,
+                              backgroundColor: "#2d5381",
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              marginRight: 20,
+                            }
+                        : null
+                    }
+                  >
+                    {inforTicket != null ? (
+                      inforTicket.status == "pending" ? (
+                        <Ionicons
+                          name="ios-reload-outline"
+                          size={24}
+                          color="black"
+                        />
+                      ) : (
+                        <AntDesign name="check" size={24} color="white" />
+                      )
+                    ) : null}
+                  </View>
+                  <View
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      // alignItems: "center",
+                    }}
+                  >
+                    <Text>Yêu cầu đã tiếp nhận</Text>
+                    <Text>
+                      {inforTicket != null
+                        ? inforTicket.status == "pending"
+                          ? "--:--"
+                          : moment(inforTicket.receivedAt).format("hh:mm a")
+                        : ""}
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    marginTop: 20,
+                  }}
+                >
+                  <View
+                    style={
+                      inforTicket != null
+                        ? inforTicket.status == "pending" ||
+                          inforTicket.status == "processing"
+                          ? {
+                              width: 50,
+                              height: 50,
+                              borderRadius: 50,
+                              backgroundColor: "white",
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              marginRight: 20,
+                              borderColor: "#2d5381",
+                              borderWidth: 2,
+                            }
+                          : {
+                              width: 50,
+                              height: 50,
+                              borderRadius: 50,
+                              backgroundColor: "#2d5381",
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              marginRight: 20,
+                            }
+                        : null
+                    }
+                  >
+                    {inforTicket != null ? (
+                      inforTicket.status == "pending" ||
+                      inforTicket.status == "processing" ? (
+                        <Ionicons
+                          name="ios-reload-outline"
+                          size={24}
+                          color="black"
+                        />
+                      ) : (
+                        <AntDesign name="check" size={24} color="white" />
+                      )
+                    ) : (
+                      ""
+                    )}
+                  </View>
+                  <View
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text>Yêu cầu đã hoàn thành</Text>
+                    <Text>
+                      {inforTicket != null
+                        ? inforTicket.status == "pending" ||
+                          inforTicket.status == "processing"
+                          ? "--:--"
+                          : moment(inforTicket.completedAt).format("hh:mm a")
+                        : ""}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              {inforTicket != null ? (
+                inforTicket.status == "pending" ||
+                inforTicket.status == "processing" ? (
+                  <Pressable style={{ ...styles.button, width: "100%" }}>
+                    <Text
+                      style={{ color: "white", fontSize: 12, fontWeight: 700 }}
+                    >
+                      Trở Về
+                    </Text>
+                  </Pressable>
+                ) : inforTicket.status == "finished" &&
+                  inforTicket.star == "" ? (
+                  <Pressable
+                    onPress={handelPresentModal}
+                    style={{ ...styles.button, width: "100%" }}
+                  >
+                    <Text
+                      style={{ color: "white", fontSize: 12, fontWeight: 700 }}
+                    >
+                      Đánh giá
+                    </Text>
+                  </Pressable>
+                ) : (
+                  <View
+                    style={{
+                      backgroundColor: "#f1f4f5",
+                      marginTop: 20,
+                      padding: 20,
+                      borderRadius: 10,
+                      display: "flex",
+                      flexDirection: "row",
+                      width: "100%",
+                    }}
+                  >
+                    <View style={{ width: "80%" }}>
+                      <Text style={{ fontSize: 14, fontWeight: 400 }}>
+                        {inforTicket.comment}
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text>{inforTicket.star}</Text>
+                      <AntDesign
+                        style={{ marginLeft: 5 }}
+                        name="star"
+                        size={24}
+                        color="#f0d440"
+                      />
+                    </View>
+                  </View>
+                )
+              ) : null}
+            </View>
           </View>
-        </View>
+        </ScrollView>
       </View>
 
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => {
-          Alert.alert("Modal has been closed.");
-          setModalVisible(!modalVisible);
-        }}
-      >
-        <View style={styles.centeredView}>
-          <View style={{ ...styles.modalView }}>
+      <BottomSheetModalProvider>
+        <BottomSheetModal
+          ref={BottomSheetModalRef}
+          index={0}
+          snapPoints={snapPoints}
+          containerStyle={{ backgroundColor: "#00000090" }}
+          style={{ padding: 20 }}
+        >
+          <View
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              flexWrap: "wrap",
+              width: "100%",
+              overflow: "hidden",
+            }}
+          >
             <Text style={styles.modalText}>Đánh giá phiếu hỗ trợ</Text>
             <View
               style={{
@@ -427,7 +459,7 @@ export default function DetailTicket({ route, navigation }) {
               textAlignVertical="top"
               style={styles.input3}
               multiline={true}
-              numberOfLines={7}
+              numberOfLines={15}
               placeholder="Lời nhận xét"
               value={comment}
               onChangeText={(text) => setComment(text)}
@@ -454,66 +486,21 @@ export default function DetailTicket({ route, navigation }) {
               </Pressable>
             </View>
           </View>
-        </View>
-      </Modal>
-
-      {/* <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => {
-          Alert.alert("Modal has been closed.");
-          setModalVisible(!modalVisible);
-        }}
-      >
+        </BottomSheetModal>
+      </BottomSheetModalProvider>
+      <Modal animationType="slide" transparent={true} visible={modalVisible}>
         <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalText}>Danh Sách Hình Ảnh</Text>
-            <View
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                width: "100%",
-                overflow: "hidden",
-                alignItems: "flex-start",
-              }}
-            >
-              {imagePicker.length != 0 ? showAllImage() : null}
-            </View>
-            <Pressable
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => setModalVisible(!modalVisible)}
-            >
-              <Text style={styles.textStyle}>Đóng</Text>
-            </Pressable>
+          <View style={{ ...styles.modalView }}>
+            <LottieView
+              source={require("../../../../../../assets/lotties/loading.json")}
+              autoPlay
+              loop
+              style={{ width: 100, height: 100 }}
+            ></LottieView>
           </View>
         </View>
       </Modal>
-
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible2}
-        onRequestClose={() => {
-          Alert.alert("Modal has been closed.");
-          setModalVisible(!modalVisible2);
-        }}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalText}>{error}</Text>
-            <Pressable
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => setModalVisible2(!modalVisible2)}
-            >
-              <Text style={styles.textStyle}>Đóng</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal> */}
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
@@ -550,6 +537,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "center",
     width: "100%",
+    paddingBottom: 100,
   },
 
   input: {

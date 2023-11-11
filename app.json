@@ -16,8 +16,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.nguyenduonglinh.Apphanhchinhdevelopment",
       "googleServicesFile": "./GoogleService-Info.plist"
-    }
+    },
+    "plugins": ["@react-native-google-signin/google-signin"]
   }
 }

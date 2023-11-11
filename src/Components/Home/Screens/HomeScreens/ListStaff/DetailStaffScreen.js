@@ -44,12 +44,13 @@ export default function DetailStaffScreen({ route, navigation }) {
   const [employeeType, setEmployeeType] = useState("");
   const [refresh, setFresh] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [types, setTypes] = useState([]);
 
   const BottomSheetModalRef = useRef(null);
   const BottomSheetModalRef2 = useRef(null);
 
   const snapPoints = ["90%"];
-  const snapPoints2 = ["60%"];
+  const snapPoints2 = ["90%"];
 
   useEffect(() => {
     fetch(`https://ndl-be-apphanhchinh.onrender.com/user/${id}`, {
@@ -80,6 +81,18 @@ export default function DetailStaffScreen({ route, navigation }) {
       .then((res) => res.json())
       .then((data) => setUsers(data));
   }, [refresh]);
+
+  useEffect(() => {
+    fetch("https://ndl-be-apphanhchinh.onrender.com/issuestype", {
+      headers: {
+        access_token: accessToken,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setTypes(data);
+      });
+  }, []);
 
   const renderUser = (id) => {
     return users
@@ -271,6 +284,16 @@ export default function DetailStaffScreen({ route, navigation }) {
         }
       });
   };
+  const renderPremission = () => {
+    return types
+      .filter((item, index) => {
+        return item._id == user.employeeType;
+      })
+      .map((item, index) => {
+        return <Text>Nhân viên {item.name}</Text>;
+      });
+  };
+  console.log(role, employeeType);
   return (
     <>
       <GestureHandlerRootView style={styles.container}>
@@ -363,13 +386,7 @@ export default function DetailStaffScreen({ route, navigation }) {
             <View>
               <Text style={{ fontWeight: 400, fontSize: 14 }}>Quyền</Text>
               <Text style={{ fontWeight: 500, fontSize: 16 }}>
-                {user != null
-                  ? user.employeeType == "baocaosuco"
-                    ? "Nhân viên sự cố"
-                    : user.employeeType == "cntt"
-                    ? "Nhân viên công nghệ thông tin"
-                    : null
-                  : null}
+                {user != null ? renderPremission() : null}
               </Text>
             </View>
             <Pressable
@@ -443,190 +460,203 @@ export default function DetailStaffScreen({ route, navigation }) {
             containerStyle={{ backgroundColor: "#00000090" }}
             style={{ padding: 20 }}
           >
-            <View>
-              <Text style={{ fontWeight: 500, fontSize: 18 }}>Cấp quyền</Text>
-              <View>
-                <Pressable
-                  onPress={() => handleOpenModal("user", "")}
-                  style={
-                    user != null
-                      ? user.role == "user"
-                        ? {
-                            backgroundColor: "#4169e1",
-                            marginTop: 10,
-                            marginBottom: 10,
-                            paddingLeft: 10,
-                            paddingRight: 10,
-                            paddingTop: 20,
-                            paddingBottom: 20,
-                            borderColor: "#d9dcdd",
-                            borderWidth: 0.7,
-                            borderRadius: 10,
-                          }
-                        : {
-                            backgroundColor: "#f1f4f5",
-                            marginTop: 10,
-                            marginBottom: 10,
-                            paddingLeft: 10,
-                            paddingRight: 10,
-                            paddingTop: 20,
-                            paddingBottom: 20,
-                            borderColor: "#d9dcdd",
-                            borderWidth: 0.7,
-                            borderRadius: 10,
-                          }
-                      : null
-                  }
-                >
-                  <Text
+            <ScrollView>
+              <View style={{ paddingBottom: 100 }}>
+                <Text style={{ fontWeight: 500, fontSize: 18 }}>Cấp quyền</Text>
+                <View>
+                  <Pressable
+                    onPress={() => handleOpenModal("user", "")}
                     style={
                       user != null
                         ? user.role == "user"
-                          ? { fontWeight: 400, fontSize: 16, color: "white" }
-                          : { fontWeight: 400, fontSize: 16 }
+                          ? {
+                              backgroundColor: "#4169e1",
+                              marginTop: 10,
+                              marginBottom: 10,
+                              paddingLeft: 10,
+                              paddingRight: 10,
+                              paddingTop: 20,
+                              paddingBottom: 20,
+                              borderColor: "#d9dcdd",
+                              borderWidth: 0.7,
+                              borderRadius: 10,
+                            }
+                          : {
+                              backgroundColor: "#f1f4f5",
+                              marginTop: 10,
+                              marginBottom: 10,
+                              paddingLeft: 10,
+                              paddingRight: 10,
+                              paddingTop: 20,
+                              paddingBottom: 20,
+                              borderColor: "#d9dcdd",
+                              borderWidth: 0.7,
+                              borderRadius: 10,
+                            }
                         : null
                     }
                   >
-                    Quyền Truy cập vào người dùng
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => handleOpenModal("staff", "baocaosuco")}
-                  style={
-                    user != null
-                      ? user.role == "staff" &&
-                        user.employeeType == "baocaosuco"
-                        ? {
-                            backgroundColor: "#4169e1",
-                            marginTop: 10,
-                            marginBottom: 10,
-                            paddingLeft: 10,
-                            paddingRight: 10,
-                            paddingTop: 20,
-                            paddingBottom: 20,
-                            borderColor: "#d9dcdd",
-                            borderWidth: 0.7,
-                            borderRadius: 10,
-                          }
-                        : {
-                            backgroundColor: "#f1f4f5",
-                            marginTop: 10,
-                            marginBottom: 10,
-                            paddingLeft: 10,
-                            paddingRight: 10,
-                            paddingTop: 20,
-                            paddingBottom: 20,
-                            borderColor: "#d9dcdd",
-                            borderWidth: 0.7,
-                            borderRadius: 10,
-                          }
-                      : null
-                  }
-                >
-                  <Text
-                    style={
-                      user != null
-                        ? user.role == "staff" &&
-                          user.employeeType == "baocaosuco"
-                          ? { fontWeight: 400, fontSize: 16, color: "white" }
-                          : { fontWeight: 400, fontSize: 16 }
-                        : null
-                    }
-                  >
-                    Quyền Truy cập vào nhân viên sự cố
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => handleOpenModal("staff", "cntt")}
-                  style={
-                    user != null
-                      ? user.role == "staff" && user.employeeType == "cntt"
-                        ? {
-                            backgroundColor: "#4169e1",
-                            marginTop: 10,
-                            marginBottom: 10,
-                            paddingLeft: 10,
-                            paddingRight: 10,
-                            paddingTop: 20,
-                            paddingBottom: 20,
-                            borderColor: "#d9dcdd",
-                            borderWidth: 0.7,
-                            borderRadius: 10,
-                            color: "white",
-                          }
-                        : {
-                            backgroundColor: "#f1f4f5",
-                            marginTop: 10,
-                            marginBottom: 10,
-                            paddingLeft: 10,
-                            paddingRight: 10,
-                            paddingTop: 20,
-                            paddingBottom: 20,
-                            borderColor: "#d9dcdd",
-                            borderWidth: 0.7,
-                            borderRadius: 10,
-                          }
-                      : null
-                  }
-                >
-                  <Text
-                    style={
-                      user != null
-                        ? user.role == "staff" && user.employeeType == "cntt"
-                          ? { fontWeight: 400, fontSize: 16, color: "white" }
-                          : { fontWeight: 400, fontSize: 16 }
-                        : null
-                    }
-                  >
-                    Quyền Truy cập vào nhân viên CNTT
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => handleOpenModal(null, "")}
-                  style={
-                    user != null
-                      ? user.role == "user"
-                        ? {
-                            backgroundColor: "#4169e1",
-                            marginTop: 10,
-                            marginBottom: 10,
-                            paddingLeft: 10,
-                            paddingRight: 10,
-                            paddingTop: 20,
-                            paddingBottom: 20,
-                            borderColor: "#d9dcdd",
-                            borderWidth: 0.7,
-                            borderRadius: 10,
-                          }
-                        : {
-                            backgroundColor: "#f1f4f5",
-                            marginTop: 10,
-                            marginBottom: 10,
-                            paddingLeft: 10,
-                            paddingRight: 10,
-                            paddingTop: 20,
-                            paddingBottom: 20,
-                            borderColor: "#d9dcdd",
-                            borderWidth: 0.7,
-                            borderRadius: 10,
-                          }
-                      : null
-                  }
-                >
-                  <Text
+                    <Text
+                      style={
+                        user != null
+                          ? user.role == "user"
+                            ? { fontWeight: 400, fontSize: 16, color: "white" }
+                            : { fontWeight: 400, fontSize: 16 }
+                          : null
+                      }
+                    >
+                      Quyền Truy cập vào người dùng
+                    </Text>
+                  </Pressable>
+                  {types.length <= 0
+                    ? null
+                    : types.map((item, index) => {
+                        return (
+                          <>
+                            <Pressable
+                              onPress={() => handleOpenModal("staff", item._id)}
+                              style={
+                                user != null
+                                  ? user.role == "staff" &&
+                                    user.employeeType == item._id
+                                    ? {
+                                        backgroundColor: "#4169e1",
+                                        marginTop: 10,
+                                        marginBottom: 10,
+                                        paddingLeft: 10,
+                                        paddingRight: 10,
+                                        paddingTop: 20,
+                                        paddingBottom: 20,
+                                        borderColor: "#d9dcdd",
+                                        borderWidth: 0.7,
+                                        borderRadius: 10,
+                                      }
+                                    : {
+                                        backgroundColor: "#f1f4f5",
+                                        marginTop: 10,
+                                        marginBottom: 10,
+                                        paddingLeft: 10,
+                                        paddingRight: 10,
+                                        paddingTop: 20,
+                                        paddingBottom: 20,
+                                        borderColor: "#d9dcdd",
+                                        borderWidth: 0.7,
+                                        borderRadius: 10,
+                                      }
+                                  : null
+                              }
+                            >
+                              <Text
+                                style={
+                                  user != null
+                                    ? user.role == "staff" &&
+                                      user.employeeType == item
+                                      ? {
+                                          fontWeight: 400,
+                                          fontSize: 16,
+                                          color: "white",
+                                        }
+                                      : { fontWeight: 400, fontSize: 16 }
+                                    : null
+                                }
+                              >
+                                Quyền Truy cập vào nhân viên {item.name}
+                              </Text>
+                            </Pressable>
+                          </>
+                        );
+                      })}
+                  <Pressable
+                    onPress={() => handleOpenModal("admin", "")}
                     style={
                       user != null
                         ? user.role == "user"
-                          ? { fontWeight: 400, fontSize: 16, color: "white" }
-                          : { fontWeight: 400, fontSize: 16 }
+                          ? {
+                              backgroundColor: "#4169e1",
+                              marginTop: 10,
+                              marginBottom: 10,
+                              paddingLeft: 10,
+                              paddingRight: 10,
+                              paddingTop: 20,
+                              paddingBottom: 20,
+                              borderColor: "#d9dcdd",
+                              borderWidth: 0.7,
+                              borderRadius: 10,
+                            }
+                          : {
+                              backgroundColor: "#f1f4f5",
+                              marginTop: 10,
+                              marginBottom: 10,
+                              paddingLeft: 10,
+                              paddingRight: 10,
+                              paddingTop: 20,
+                              paddingBottom: 20,
+                              borderColor: "#d9dcdd",
+                              borderWidth: 0.7,
+                              borderRadius: 10,
+                            }
                         : null
                     }
                   >
-                    Khóa quyền truy cập
-                  </Text>
-                </Pressable>
+                    <Text
+                      style={
+                        user != null
+                          ? user.role == "user"
+                            ? { fontWeight: 400, fontSize: 16, color: "white" }
+                            : { fontWeight: 400, fontSize: 16 }
+                          : null
+                      }
+                    >
+                      Quyền truy cập vào quản trị viên
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => handleOpenModal(null, "")}
+                    style={
+                      user != null
+                        ? user.role == "user"
+                          ? {
+                              backgroundColor: "#4169e1",
+                              marginTop: 10,
+                              marginBottom: 10,
+                              paddingLeft: 10,
+                              paddingRight: 10,
+                              paddingTop: 20,
+                              paddingBottom: 20,
+                              borderColor: "#d9dcdd",
+                              borderWidth: 0.7,
+                              borderRadius: 10,
+                            }
+                          : {
+                              backgroundColor: "#f1f4f5",
+                              marginTop: 10,
+                              marginBottom: 10,
+                              paddingLeft: 10,
+                              paddingRight: 10,
+                              paddingTop: 20,
+                              paddingBottom: 20,
+                              borderColor: "#d9dcdd",
+                              borderWidth: 0.7,
+                              borderRadius: 10,
+                            }
+                        : null
+                    }
+                  >
+                    <Text
+                      style={
+                        user != null
+                          ? user.role == "user"
+                            ? { fontWeight: 400, fontSize: 16, color: "white" }
+                            : { fontWeight: 400, fontSize: 16 }
+                          : null
+                      }
+                    >
+                      Khóa quyền truy cập
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
-            </View>
+            </ScrollView>
           </BottomSheetModal>
         </BottomSheetModalProvider>
 
@@ -652,14 +682,18 @@ export default function DetailStaffScreen({ route, navigation }) {
                 <>
                   <Text style={styles.modalText}>
                     {role == null
-                      ? "Bạn muốn hủy quyền truy cập của tài khoản này ?"
+                      ? "Bạn muốn khóa quyền truy cập của người này ?"
                       : role == "user"
-                      ? "Bạn muốn cấp quyền người dùng cho tài khoản này ?"
-                      : role == "staff" && employeeType == "baocaosuco"
-                      ? "Bạn muốn cấp quyền nhân viên sự cố cho tài khoản này ?"
-                      : role == "staff" && employeeType == "cntt"
-                      ? "Bạn muốn cấp quyền nhân viên CNTT cho tài khoản này ?"
-                      : null}
+                      ? "Bạn muốn cấp quyền truy cập người dùng ?"
+                      : role == "admin"
+                      ? "Bạn muốn cấp quyền truy cập quản trị viên ?"
+                      : types
+                          .filter((item, index) => {
+                            return item._id == employeeType;
+                          })
+                          .map((item, index) => {
+                            return `Bạn muốn cấp quyền truy cập nhân viên ${item.name} ?`;
+                          })}
                   </Text>
 
                   <View

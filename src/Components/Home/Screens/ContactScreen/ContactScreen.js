@@ -8,28 +8,37 @@ import {
   FlatList,
 } from "react-native";
 import React, { useState, useEffect } from "react";
-import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
   Feather,
   FontAwesome,
   AntDesign,
   MaterialIcons,
 } from "@expo/vector-icons";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import {
-  GoogleSignin,
-  GoogleSigninButton,
-  statusCodes,
-} from "@react-native-google-signin/google-signin";
 
-export default function ContactScreen() {
+export default function ContactScreen({ route, navigation }) {
+  const { userID, accessToken } = route.params;
   const [staff, setStaff] = useState([]);
+  const [users, setUsers] = useState([]);
   //get all staff
   useEffect(() => {
-    fetch("https://ndl-be-apphanhchinh.onrender.com/user/staff")
+    fetch("https://ndl-be-apphanhchinh.onrender.com/user/staff", {
+      headers: {
+        access_token: accessToken,
+      },
+    })
       .then((res) => res.json())
       .then((data) => setStaff(data));
+  }, []);
+
+  //get all user
+  useEffect(() => {
+    fetch("https://ndl-be-apphanhchinh.onrender.com/user", {
+      headers: {
+        access_token: accessToken,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setUsers(data));
   }, []);
 
   const ItemStaff = ({ data }) => (
@@ -42,6 +51,35 @@ export default function ContactScreen() {
       <MaterialIcons name="keyboard-arrow-right" size={24} color="black" />
     </View>
   );
+
+  const renderItem = (type) => {
+    return users
+      .filter((item, index) => {
+        return item.role == type;
+      })
+      .map((item, index) => {
+        return (
+          <Pressable
+            onPress={() =>
+              navigation.navigate("DetailContactScreen", { id: item.googleID })
+            }
+            key={item.googleID}
+            style={styles.item}
+          >
+            <Image
+              style={{ width: 50, aspectRatio: "1/1", borderRadius: 50 }}
+              source={{ uri: item.imageURL }}
+            ></Image>
+            <Text style={{ fontSize: 14, fontWeight: 500 }}>{item.name}</Text>
+            <MaterialIcons
+              name="keyboard-arrow-right"
+              size={24}
+              color="black"
+            />
+          </Pressable>
+        );
+      });
+  };
 
   return (
     <View style={styles.container}>
@@ -68,12 +106,19 @@ export default function ContactScreen() {
           {staff.length == 0 ? (
             <Text>Chưa có nhân viên</Text>
           ) : (
-            <FlatList
-              initialNumToRender={1}
-              data={staff}
-              renderItem={({ item }) => <ItemStaff data={item} />}
-              keyExtractor={(item) => item._id}
-            />
+            <View>{users.length > 0 ? renderItem("staff") : null}</View>
+          )}
+        </View>
+        <View style={styles.list}>
+          <Text
+            style={{ padding: 10, opacity: 0.5, fontSize: 14, fontWeight: 600 }}
+          >
+            Phòng hành chính
+          </Text>
+          {staff.length == 0 ? (
+            <Text>Chưa có nhân viên</Text>
+          ) : (
+            <View>{users.length > 0 ? renderItem("admin") : null}</View>
           )}
         </View>
       </View>

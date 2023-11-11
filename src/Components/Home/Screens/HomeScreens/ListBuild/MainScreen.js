@@ -61,6 +61,9 @@ export default function MainListBuildScreen({ route, navigation }) {
             // switchScreen: (id) => {
             //   navigation.navigate("DetailTicketStaff", { idTicket: id });
             // },
+            handleBack: () => {
+              navigation.goBack();
+            },
           }}
           name="ListBuildScreen"
           component={ListBuildScreen}

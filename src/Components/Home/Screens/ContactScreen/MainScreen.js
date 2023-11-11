@@ -22,10 +22,12 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 import ContactScreen from "./ContactScreen";
+import DetailContactScreen from "./DetailContactScreen";
 
 const Stack = createNativeStackNavigator();
 
-export default function MainContactScreen() {
+export default function MainContactScreen({ route, navigation }) {
+  const { userID, accessToken } = route.params;
   const MyTheme = {
     ...DefaultTheme,
     colors: {
@@ -41,9 +43,16 @@ export default function MainContactScreen() {
         <View style={styles.header}></View>
         <Stack.Navigator>
           <Stack.Screen
+            initialParams={{ userID: userID, accessToken: accessToken }}
             options={{ headerShown: false }}
             name="Contact"
             component={ContactScreen}
+          />
+          <Stack.Screen
+            initialParams={{ userID: userID, accessToken: accessToken }}
+            options={{ headerShown: false }}
+            name="DetailContactScreen"
+            component={DetailContactScreen}
           />
         </Stack.Navigator>
       </View>

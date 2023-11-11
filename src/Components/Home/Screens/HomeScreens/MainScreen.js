@@ -1,6 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import { Dimensions } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import HomeScreen from "./HomeScreen";
@@ -10,11 +11,24 @@ import MainListTicketScreen from "./ListTicket/MainScreen";
 import DetailTicketStaff from "./DetailTicketStaff/MainScreen";
 import MainListBuildScreen from "./ListBuild/MainScreen";
 import MainListStaffScreen from "./ListStaff/MainScreen";
+import MainListTicketAdmin from "./ListTicketAdmin/MainScreen";
+import MainChartScreen from "./Charts/MainScreen";
+import { io } from "socket.io-client";
 
 const Stack = createNativeStackNavigator();
 
 export default function MainHomeScreen({ route, navigation }) {
   const { userID, accessToken } = route.params;
+  const socket = useRef();
+
+  useEffect(() => {
+    socket.current = io.connect("https://linhnd-socketoi-udhc.onrender.com");
+
+    socket.current.on("server-send-createTicket", (data) => {
+      console.log("MAIN SCREEN : " + JSON.stringify(data));
+    });
+  }, []);
+
   const MyTheme = {
     ...DefaultTheme,
     colors: {
@@ -23,6 +37,12 @@ export default function MainHomeScreen({ route, navigation }) {
       background: "#2d5381",
       card: "rgb(244, 245, 242)",
     },
+  };
+
+  const sendCreateTicket = (message) => {
+    socket.current.emit("on-send-data", {
+      message: message,
+    });
   };
   return (
     <NavigationContainer theme={MyTheme} independent={true}>
@@ -39,8 +59,11 @@ export default function MainHomeScreen({ route, navigation }) {
             initialParams={{ userID: userID, accessToken: accessToken }}
             options={{ headerShown: false }}
             name="CreateTicket"
-            component={CreateTiket}
-          />
+          >
+            {(props) => (
+              <CreateTiket sendCreateTicket={sendCreateTicket} {...props} />
+            )}
+          </Stack.Screen>
           <Stack.Screen
             initialParams={{ userID: userID, accessToken: accessToken }}
             options={{ headerShown: false }}
@@ -70,6 +93,18 @@ export default function MainHomeScreen({ route, navigation }) {
             options={{ headerShown: false }}
             name="MainListStaffScreen"
             component={MainListStaffScreen}
+          />
+          <Stack.Screen
+            initialParams={{ userID: userID, accessToken: accessToken }}
+            options={{ headerShown: false }}
+            name="MainListTicketAdmin"
+            component={MainListTicketAdmin}
+          />
+          <Stack.Screen
+            initialParams={{ userID: userID, accessToken: accessToken }}
+            options={{ headerShown: false }}
+            name="MainChartScreen"
+            component={MainChartScreen}
           />
         </Stack.Navigator>
       </View>

@@ -6,7 +6,7 @@ import {
   Image,
   BackHandler,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
@@ -15,24 +15,30 @@ import {
   AntDesign,
   MaterialIcons,
 } from "@expo/vector-icons";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import MainHomeScreen from "./Screens/HomeScreens/MainScreen";
 import MainHistoryScreen from "../Home/Screens/HistoryScreen/MainScreen";
 import MainSettingScreen from "../Home/Screens/SettingScreen/MainScreen";
 import MainContactScreen from "./Screens/ContactScreen/MainScreen";
+import MainHistoryStaffScreen from "./Screens/HomeScreens/HistoryStaff/MainScreen";
 import {
   GoogleSignin,
   GoogleSigninButton,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
+import socketIOClient from "socket.io-client";
+const host = "https://ndl-be-apphanhchinh.onrender.com";
 
 const Tab = createMaterialBottomTabNavigator();
-const Stack = createNativeStackNavigator();
 
 export default function MainScreen({ route, navigation }) {
   const { userID, accessToken } = route.params;
   const [user, setUser] = useState();
+  const socketRef = useRef();
+
+  useEffect(() => {
+    const socket = socketIOClient.connect(host);
+  }, []);
 
   const MyTheme = {
     ...DefaultTheme,
@@ -62,8 +68,6 @@ export default function MainScreen({ route, navigation }) {
       .then((res) => res.json())
       .then((data) => setUser(data));
   }, []);
-
-  console.log(user);
 
   const signOut = async () => {
     try {
@@ -170,7 +174,13 @@ export default function MainScreen({ route, navigation }) {
             <Tab.Screen
               initialParams={{ userID: userID, accessToken: accessToken }}
               name="HistoryScreen"
-              component={MainHistoryScreen}
+              component={
+                user.role == "user"
+                  ? MainHistoryScreen
+                  : user.role == "staff"
+                  ? MainHistoryStaffScreen
+                  : MainHistoryScreen
+              }
               options={{
                 headerShown: false,
                 tabBarLabel: "Lịch Sử",
@@ -203,6 +213,10 @@ export default function MainScreen({ route, navigation }) {
             {user != null ? (
               user.role == "user" ? (
                 <Tab.Screen
+                  initialParams={{
+                    userID: userID,
+                    accessToken: accessToken,
+                  }}
                   name="ContactScreen"
                   component={MainContactScreen}
                   options={{

@@ -7,7 +7,6 @@ import {
   TextInput,
   Pressable,
   ScrollView,
-  Modal,
   SafeAreaView,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
@@ -19,17 +18,17 @@ import {
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
 import moment from "moment";
-import Carousel, { Pagination } from "react-native-snap-carousel";
 import { SelectList } from "react-native-dropdown-select-list";
 import ImageView from "react-native-image-viewing";
+import { CommonActions } from "@react-navigation/native";
+import Modal from "react-native-modal";
+import LottieView from "lottie-react-native";
 
 export default function DetailTicketStaff({ route, navigation }) {
   const { accessToken, idTicket, userID } = route.params;
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalVisible2, setModalVisible2] = useState(false);
   const [inforTicket, setInforTicket] = useState();
   const [users, setUsers] = useState([]);
-  const [widthBody, setWidthBody] = useState(0);
   const [selectedReason, setSelectedReason] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [note, setNote] = useState("");
@@ -118,7 +117,21 @@ export default function DetailTicketStaff({ route, navigation }) {
     { key: "2 Tiếng", value: "2 Tiếng" },
     { key: "1 Ngày", value: "1 Ngày" },
   ];
+  // let trueResponse = JSON.parse("true");
+
+  // let falseResponse = JSON.parse("false");
+
   const receiveTicket = () => {
+    setModalVisible(true);
+
+    const date1 = new Date(
+      moment(inforTicket.createdAt).format("DD-MM-yyyy hh:mm")
+    );
+    const date2 = new Date(moment(new Date()).format("DD-MM-yyyy hh:mm"));
+
+    let msDifference = date2 - date1;
+    let minutes = Math.floor(msDifference / 1000 / 60);
+
     fetch(
       `https://ndl-be-apphanhchinh.onrender.com/ticket/update/${inforTicket._id}`,
       {
@@ -131,12 +144,14 @@ export default function DetailTicketStaff({ route, navigation }) {
           status: "processing",
           receivedAt: new Date().toJSON(),
           staffID: userID,
+          isTime: minutes < 15 ? true : false,
         }),
       }
     )
       .then((res) => res.json())
       .then((data) => {
         if (data.code == 200) {
+          setModalVisible(false);
           setRefesh(["refesh"]);
         }
       });
@@ -189,6 +204,7 @@ export default function DetailTicketStaff({ route, navigation }) {
       <View style={styles.content}>
         <View style={styles.header}>
           <AntDesign
+            onPress={() => navigation.dispatch(CommonActions.goBack())}
             style={{ left: 10, top: 10, flex: 0.2 }}
             name="left"
             size={20}
@@ -726,63 +742,25 @@ export default function DetailTicketStaff({ route, navigation }) {
           </View>
         </ScrollView>
       </View>
-
-      {/* <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => {
-          Alert.alert("Modal has been closed.");
-          setModalVisible(!modalVisible);
-        }}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalText}>Danh Sách Hình Ảnh</Text>
-            <View
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                width: "100%",
-                overflow: "hidden",
-                alignItems: "flex-start",
-              }}
-            >
-              {imagePicker.length != 0 ? showAllImage() : null}
-            </View>
-            <Pressable
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => setModalVisible(!modalVisible)}
-            >
-              <Text style={styles.textStyle}>Đóng</Text>
-            </Pressable>
-          </View>
+      <Modal isVisible={modalVisible}>
+        <View
+          style={{
+            backgroundColor: "white",
+            padding: 20,
+            height: 100,
+            display: "flex",
+            alignItems: "center",
+            borderRadius: 10,
+          }}
+        >
+          <LottieView
+            source={require("../../../../../../assets/lotties/loading.json")}
+            autoPlay
+            loop
+            style={{ width: 100, height: 100 }}
+          ></LottieView>
         </View>
       </Modal>
-
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible2}
-        onRequestClose={() => {
-          Alert.alert("Modal has been closed.");
-          setModalVisible(!modalVisible2);
-        }}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalText}>{error}</Text>
-            <Pressable
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => setModalVisible2(!modalVisible2)}
-            >
-              <Text style={styles.textStyle}>Đóng</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal> */}
     </View>
   );
 }

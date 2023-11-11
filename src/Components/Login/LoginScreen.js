@@ -8,14 +8,18 @@ import {
   Modal,
 } from "react-native";
 import { Dimensions } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import * as WebBrowser from "expo-web-browser";
-import "expo-dev-client";
+
 import {
   GoogleSignin,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
-import axios from "axios";
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+} from "@gorhom/bottom-sheet";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -23,6 +27,19 @@ export default function LoginScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [message, setMessage] = useState("");
   const [bgPress, setBgPress] = useState(false);
+  const [base, setBase] = useState("Lựa chọn cơ sở");
+  const BottomSheetModalRef = useRef(null);
+  const snapPoints = ["70%"];
+
+  const coso = [
+    "FPT Polytechnic HO",
+    "FPT Polytechnic Hà Nội",
+    "FPT Polytechnic Hồ Chí Minh",
+    "FPT Polytechnic Đà Nẵng",
+    "FPT Polytechnic Cần Thơ",
+    "FPT Polytechnic Tây Nguyên",
+    "FPT Polytechnic Hải Phòng",
+  ];
 
   GoogleSignin.configure({
     scopes: ["https://www.googleapis.com/auth/user.phonenumbers.read"],
@@ -33,69 +50,78 @@ export default function LoginScreen({ navigation }) {
   });
 
   signIn = async () => {
-    try {
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
+    if (base == "Lựa chọn cơ sở") {
+      setMessage("Vui lòng lựa chọn cơ sở");
+      setModalVisible(true);
+    } else {
+      try {
+        await GoogleSignin.hasPlayServices();
+        const userInfo = await GoogleSignin.signIn();
 
-      if (userInfo != null) {
-        if (userInfo.user.email.indexOf("fpt.edu.vn") == -1) {
-          setModalVisible(true);
-          setMessage("Vui lòng sử dụng email của FPT POLYTECHNIC !");
-          try {
-            await GoogleSignin.signOut();
-            // setState({ user: null }); // Remember to remove the user from your app's state as well
-          } catch (error) {
-            console.error("LỖI :" + error);
-          }
-        } else {
-          const user = {
-            googleID: userInfo.user.id,
-            email: userInfo.user.email,
-            name: userInfo.user.name,
-            imageURL:
-              userInfo.user.photo != null
-                ? userInfo.user.photo
-                : "https://i.ibb.co/pJfVYnj/logo-fpt-inkythuatso-1-01-01-14-33-35.jpg",
-          };
-          fetch("https://ndl-be-apphanhchinh.onrender.com/authentication", {
-            method: "POST",
-            headers: {
-              Accept: "application.json",
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(user),
-          })
-            .then((res) => res.json())
-            .then((data) => {
-              if (data.code == 200) {
-                navigation.navigate("Main", {
-                  userID: data.infor.googleID,
-                  accessToken: data.accessToken,
-                });
-              }
+        if (userInfo != null) {
+          if (userInfo.user.email.indexOf("fpt.edu.vn") == -1) {
+            setModalVisible(true);
+            setMessage("Vui lòng sử dụng email của FPT POLYTECHNIC !");
+            try {
+              await GoogleSignin.signOut();
+              // setState({ user: null }); // Remember to remove the user from your app's state as well
+            } catch (error) {
+              console.error("LỖI :" + error);
+            }
+          } else {
+            const user = {
+              googleID: userInfo.user.id,
+              email: userInfo.user.email,
+              name: userInfo.user.name,
+              imageURL:
+                userInfo.user.photo != null
+                  ? userInfo.user.photo
+                  : "https://i.ibb.co/pJfVYnj/logo-fpt-inkythuatso-1-01-01-14-33-35.jpg",
+            };
+            fetch("https://ndl-be-apphanhchinh.onrender.com/authentication", {
+              method: "POST",
+              headers: {
+                Accept: "application.json",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(user),
             })
-            .catch((err) => console.log(err));
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.code == 200) {
+                  navigation.navigate("Main", {
+                    userID: data.infor.googleID,
+                    accessToken: data.accessToken,
+                  });
+                }
+              })
+              .catch((err) => console.log(err));
+          }
         }
-      }
-    } catch (error) {
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        // user cancelled the login flow
-        console.log("Hủy Đăng Nhập");
-      } else if (error.code === statusCodes.IN_PROGRESS) {
-        // operation (e.g. sign in) is in progress already
-        console.log("Hủy Đăng Nhập 1");
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        // play services not available or outdated
-        console.log("play services not available or outdated");
-      } else {
-        // some other error happened
-        console.log(error);
+      } catch (error) {
+        if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+          // user cancelled the login flow
+          console.log("Hủy Đăng Nhập");
+        } else if (error.code === statusCodes.IN_PROGRESS) {
+          // operation (e.g. sign in) is in progress already
+          console.log("Hủy Đăng Nhập 1");
+        } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+          // play services not available or outdated
+          console.log("play services not available or outdated");
+        } else {
+          // some other error happened
+          console.log(error);
+        }
       }
     }
   };
 
+  const handelPresentModal = () => {
+    BottomSheetModalRef.current?.present();
+  };
+
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       <View style={styles.header}></View>
       <Modal
         animationType="slide"
@@ -124,8 +150,30 @@ export default function LoginScreen({ navigation }) {
           style={styles.logo}
           source={{ uri: "https://i.ibb.co/LQ0mhhR/logo.png" }}
         ></Image>
-        <Pressable style={styles.button}>
-          <Text>Lựa chọn cơ sở</Text>
+        <Pressable
+          onPress={handelPresentModal}
+          style={{
+            backgroundColor: "#ededed",
+            paddingLeft: 20,
+            paddingRight: 20,
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            paddingTop: 10,
+            paddingBottom: 10,
+            borderRadius: 5,
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.23,
+            shadowRadius: 2.62,
+
+            elevation: 4,
+          }}
+        >
+          <Text>{base}</Text>
         </Pressable>
         <Pressable
           onPress={signIn}
@@ -138,7 +186,47 @@ export default function LoginScreen({ navigation }) {
           <Text style={styles.buttonText}>Google</Text>
         </Pressable>
       </View>
-    </View>
+      <BottomSheetModalProvider>
+        <BottomSheetModal
+          ref={BottomSheetModalRef}
+          index={0}
+          snapPoints={snapPoints}
+          containerStyle={{ backgroundColor: "#00000090" }}
+          style={{ padding: 20 }}
+        >
+          <View
+            style={{
+              display: "flex",
+
+              alignItems: "center",
+              width: "100%",
+              overflow: "hidden",
+            }}
+          >
+            {coso.map((item, index) => {
+              return (
+                <Pressable
+                  onPress={() => {
+                    setBase(item);
+                    BottomSheetModalRef.current?.close();
+                  }}
+                  style={{
+                    borderBottomWidth: 1,
+                    borderColor: "#00000050",
+                    width: "80%",
+                    display: "flex",
+                    alignItems: "center",
+                    padding: 20,
+                  }}
+                >
+                  <Text>{item}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </BottomSheetModal>
+      </BottomSheetModalProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -184,6 +272,8 @@ const styles = StyleSheet.create({
     backgroundColor: "red",
     paddingTop: 10,
     paddingBottom: 10,
+    paddingLeft: 20,
+    paddingRight: 20,
     width: "100%",
     borderRadius: 5,
     display: "flex",

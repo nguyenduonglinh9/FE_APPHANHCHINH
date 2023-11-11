@@ -25,8 +25,7 @@ import {
 } from "@react-native-google-signin/google-signin";
 var randomColor = require("randomcolor");
 import { CommonActions } from "@react-navigation/native";
-import { BlurView } from "@react-native-community/blur";
-import Modal from "react-native-modal";
+// import { BlurView } from "@react-native-community/blur";
 
 export default function DetailRoomScreen({ route, navigation }) {
   const { accessToken, userID, key, floor, idRoom } = route.params;
@@ -223,7 +222,7 @@ export default function DetailRoomScreen({ route, navigation }) {
           </Pressable>
         </View>
       </View>
-      <BlurView
+      {/* <BlurView
         blurType="light"
         blurAmount={5}
         reducedTransparencyFallbackColor="white"
@@ -251,7 +250,7 @@ export default function DetailRoomScreen({ route, navigation }) {
         }
       >
         <ActivityIndicator size="medium" color="#00ff00" />
-      </BlurView>
+      </BlurView> */}
     </View>
   );
 }

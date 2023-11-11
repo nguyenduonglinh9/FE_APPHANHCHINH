@@ -24,11 +24,13 @@ import {
 } from "@react-native-google-signin/google-signin";
 
 export default function ListStaffScreen({ toDetailScreen, route, navigation }) {
-  const [staff, setStaff] = useState([]);
   const { userID, accessToken } = route.params;
+  const [staff, setStaff] = useState([]);
+  const [types, setTypes] = useState([]);
+
   //get all staff
   useEffect(() => {
-    fetch("https://ndl-be-apphanhchinh.onrender.com/user/staff", {
+    fetch("https://ndl-be-apphanhchinh.onrender.com/user", {
       headers: {
         access_token: accessToken,
       },
@@ -37,10 +39,21 @@ export default function ListStaffScreen({ toDetailScreen, route, navigation }) {
       .then((data) => setStaff(data));
   }, []);
 
+  //
+  useEffect(() => {
+    fetch("https://ndl-be-apphanhchinh.onrender.com/issuestype", {
+      headers: {
+        access_token: accessToken,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setTypes(data));
+  }, []);
+
   const renderStaff = (type) => {
     return staff
       .filter((item, index) => {
-        return item.employeeType == type;
+        return item.role == type;
       })
       .map((item, index) => {
         return (
@@ -53,13 +66,30 @@ export default function ListStaffScreen({ toDetailScreen, route, navigation }) {
               style={{ width: 50, aspectRatio: "1/1", borderRadius: 50 }}
               source={{ uri: item.imageURL }}
             ></Image>
-            <Text style={{ fontSize: 14, fontWeight: 500 }}>{item.name}</Text>
+            <View>
+              <Text style={{ fontSize: 14, fontWeight: 500 }}>{item.name}</Text>
+              {renderType(item.employeeType)}
+            </View>
             <MaterialIcons
               name="keyboard-arrow-right"
               size={24}
               color="black"
             />
           </Pressable>
+        );
+      });
+  };
+
+  const renderType = (id) => {
+    return types
+      .filter((item, index) => {
+        return item._id == id;
+      })
+      .map((item, index) => {
+        return (
+          <Text style={{ fontSize: 14, fontWeight: 300 }}>
+            Nhân viên {item.name}
+          </Text>
         );
       });
   };
@@ -76,24 +106,24 @@ export default function ListStaffScreen({ toDetailScreen, route, navigation }) {
           <Text
             style={{ padding: 10, opacity: 0.5, fontSize: 14, fontWeight: 600 }}
           >
-            Phòng sự cố
+            Phòng kỹ thuật
           </Text>
           {staff.length == 0 ? (
             <Text>Chưa có nhân viên</Text>
           ) : (
-            renderStaff((type = "baocaosuco"))
+            renderStaff((type = "staff"))
           )}
         </View>
         <View style={styles.list}>
           <Text
             style={{ padding: 10, opacity: 0.5, fontSize: 14, fontWeight: 600 }}
           >
-            Phòng công nghệ thông tin
+            Phòng hành chính
           </Text>
           {staff.length == 0 ? (
             <Text>Chưa có nhân viên</Text>
           ) : (
-            renderStaff((type = "cntt"))
+            renderStaff((type = "admin"))
           )}
         </View>
       </View>

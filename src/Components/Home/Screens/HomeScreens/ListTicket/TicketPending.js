@@ -50,6 +50,16 @@ export default function TicketPending({ route, navigation }) {
       .then((data) => setUsers(data));
   }, []);
 
+  useEffect(() => {
+    fetch(`https://ndl-be-apphanhchinh.onrender.com/user/${userID}`, {
+      headers: {
+        access_token: accessToken,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setUser(data));
+  }, []);
+
   const renderUser = (id) => {
     if (users != null) {
       return users
@@ -86,10 +96,11 @@ export default function TicketPending({ route, navigation }) {
         });
     }
   };
+
   const RenderTicket = () => {
     return tickets
       .filter((item, index) => {
-        return item.status == "pending";
+        return item.typeID == user.employeeType && item.status == "pending";
       })
       .map((item, index) => {
         return (
@@ -104,17 +115,14 @@ export default function TicketPending({ route, navigation }) {
               style={{
                 display: "flex",
                 flexDirection: "row",
+                justifyContent: "space-between",
                 alignItems: "center",
               }}
             >
               <Text>{item.build}</Text>
-              <Text style={{ marginLeft: 20 }}>Phòng : {item.room}</Text>
-              <Text style={{ marginLeft: 20 }}>
-                {moment(item.createdAt).format("hh:mm a")}
-              </Text>
-              <Text style={{ marginLeft: 20 }}>
-                {moment(item.createdAt).format("DD/MM/YYYY")}
-              </Text>
+              <Text>Phòng : {item.room}</Text>
+              <Text>{moment(item.createdAt).format("hh:mm a")}</Text>
+              <Text>{moment(item.createdAt).format("DD/MM/YYYY")}</Text>
             </View>
           </Pressable>
         );
@@ -123,10 +131,10 @@ export default function TicketPending({ route, navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.list}>
-        {tickets.length == 0 ? (
-          <Text>Chưa có phiếu hỗ trọ yêu cầu</Text>
-        ) : (
+        {tickets.length > 0 && user != null ? (
           RenderTicket()
+        ) : (
+          <Text>Chưa có phiếu hỗ trọ yêu cầu</Text>
         )}
       </View>
     </View>

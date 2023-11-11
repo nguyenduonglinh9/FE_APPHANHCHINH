@@ -7,6 +7,7 @@ import {
   TextInput,
   Pressable,
   Modal,
+  ScrollView,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import { Feather, AntDesign } from "@expo/vector-icons";
@@ -18,13 +19,11 @@ import {
   BottomSheetModal,
   BottomSheetModalProvider,
 } from "@gorhom/bottom-sheet";
-import {
-  GestureHandlerRootView,
-  ScrollView,
-} from "react-native-gesture-handler";
-import Constants from "expo-constants";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { io } from "socket.io-client";
+import { useSafeArea } from "react-native-safe-area-context";
 
-export default function CreateTiket({ route, navigation }) {
+export default function CreateTiket({ route, navigation, sendCreateTicket }) {
   const { type, userID, accessToken } = route.params;
   const [showList, setShowList] = useState(false);
   const [test, setTest] = useState("Sự Cố Đang Gặp Phải");
@@ -39,26 +38,49 @@ export default function CreateTiket({ route, navigation }) {
   const [selectedBuild, setSelectedBuild] = useState("");
   const [rooms, setRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState("");
+  const [selectedIssues, setSelectedIssues] = useState("");
   const [loading, setLoading] = useState(false);
+  const [issuesTypes, setIssuesTypes] = useState([]);
+  const [issues, setIssues] = useState([]);
+
+  const socket = useRef();
+  const insets = useSafeArea();
 
   const BottomSheetModalRef = useRef(null);
   const snapPoints = ["90%"];
 
-  const listProblem = [
-    "Cơ Sở Vật Chất",
-    "Thiết Bị Mạng",
-    "Vệ Sinh Phòng Học",
-    "Góp Ý Phòng Học",
-    "Sự Cố Khác",
-  ];
-  const listCNTT = [
-    "Hỗ Trợ Khai Báo Connect Wifi, Update Địa Chỉ MAC",
-    "Tài Khoản Mail @FE, @FPT",
-    "Hỗ Trợ AP, LMS",
-    "Hỗ Trợ Kết Nối TIVI",
-    "Hỗ Trợ Máy In, Photo",
-    "Sự Cố Khác",
-  ];
+  //socketIO
+  useEffect(() => {
+    socket.current = io.connect("https://linhnd-socketoi-udhc.onrender.com");
+
+    // socket.current.on("server-send-data", (data) => {
+    //   console.log(data);
+    // });
+  }, []);
+
+  useEffect(() => {
+    fetch("https://ndl-be-apphanhchinh.onrender.com/issuestype", {
+      headers: {
+        access_token: accessToken,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setIssuesTypes(data);
+      });
+  }, []);
+
+  useEffect(() => {
+    fetch("https://ndl-be-apphanhchinh.onrender.com/issues", {
+      headers: {
+        access_token: accessToken,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setIssues(data);
+      });
+  }, []);
 
   useEffect(() => {
     fetch("https://ndl-be-apphanhchinh.onrender.com/building", {
@@ -221,7 +243,7 @@ export default function CreateTiket({ route, navigation }) {
     } else if (selectedRoom == 0) {
       setError("Vui lòng chọn phòng học ");
       setModalVisible2(true);
-    } else if (test == "Sự Cố Đang Gặp Phải") {
+    } else if (selectedIssues == 0) {
       setError("Vui lòng chọn loại sự cố đang gặp");
       setModalVisible2(true);
     } else {
@@ -264,11 +286,13 @@ export default function CreateTiket({ route, navigation }) {
               star: "",
               comment: "",
               type: type,
+              typeID: selectedIssues,
               note: "",
               time: "",
               build: selectedBuild,
               room: selectedRoom,
               reason: "",
+              isTime: "",
             };
             fetch("https://ndl-be-apphanhchinh.onrender.com/ticket/create", {
               method: "POST",
@@ -295,9 +319,38 @@ export default function CreateTiket({ route, navigation }) {
     BottomSheetModalRef.current?.present();
   };
 
+  const handleList = () => {
+    if (type == "baocaosuco") {
+      const newwArr = issuesTypes.filter((item, index) => {
+        return item.name == "Công Nghệ Thông Tin";
+      });
+
+      return issues
+        .filter((item, index) => {
+          return item.idType != newwArr[0]._id;
+        })
+        .map((item, index) => {
+          return { key: item.idType, value: item.name };
+        });
+    } else {
+      const newwArr = issuesTypes.filter((item, index) => {
+        return item.name == "Công Nghệ Thông Tin" || item.name == "Khác";
+      });
+
+      return issues
+        .filter((item, index) => {
+          return item.idType == newwArr[0]._id || item.idType == newwArr[1]._id;
+        })
+        .reverse()
+        .map((item, index) => {
+          return { key: item.idType, value: item.name };
+        });
+    }
+  };
+
   return (
     <GestureHandlerRootView style={styles.container}>
-      <View style={styles.content}>
+      <View style={{ ...styles.content, paddingTop: insets.top }}>
         <View style={styles.header}>
           <AntDesign
             style={{ position: "absolute", left: 10, top: 10 }}
@@ -310,181 +363,226 @@ export default function CreateTiket({ route, navigation }) {
             {type == "baocaosuco" ? "Báo Cáo Sự Cố" : "Yêu Cầu Hỗ Trợ CNTT"}
           </Text>
         </View>
-        <View style={styles.body}>
-          <SelectList
-            setSelected={(val) => setSelectedBuild(val)}
-            data={build.length != 0 ? build : []}
-            maxHeight={150}
-            defaultOption={{ key: "0", value: "Chọn tòa nhà" }}
-            boxStyles={{
-              marginTop: 20,
-              maxWidth: "90%",
-              minWidth: "90%",
-              backgroundColor: "#f1f4f5",
-              // padding: 10,
-              borderRadius: 5,
-              shadowColor: "#000",
-              shadowOffset: {
-                width: 0,
-                height: 2,
-              },
-              shadowOpacity: 0.25,
-              shadowRadius: 3.84,
+        <ScrollView>
+          <View style={styles.body}>
+            <SelectList
+              setSelected={(val) => setSelectedBuild(val)}
+              data={build.length != 0 ? build : []}
+              maxHeight={150}
+              defaultOption={{ key: "0", value: "Chọn tòa nhà" }}
+              boxStyles={{
+                marginTop: 20,
+                maxWidth: "90%",
+                minWidth: "90%",
+                backgroundColor: "#f1f4f5",
+                // padding: 10,
+                borderRadius: 5,
+                shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
 
-              elevation: 5,
-              borderWidth: 0,
-            }}
-          />
-          <SelectList
-            setSelected={(val) => setSelectedRoom(val)}
-            data={selectedBuild != 0 ? rooms : []}
-            defaultOption={{ key: "0", value: "Chọn phòng học" }}
-            boxStyles={{
-              borderWidth: 0,
-              marginTop: 20,
-              maxWidth: "90%",
-              minWidth: "90%",
-              backgroundColor: "#f1f4f5",
-              // padding: 10,
-              borderRadius: 5,
-              shadowColor: "#000",
-              shadowOffset: {
-                width: 0,
-                height: 2,
-              },
-              shadowOpacity: 0.25,
-              shadowRadius: 3.84,
+                elevation: 5,
+                borderWidth: 0,
+              }}
+            />
+            <SelectList
+              setSelected={(val) => setSelectedRoom(val)}
+              data={selectedBuild != 0 ? rooms : []}
+              defaultOption={{ key: "0", value: "Chọn phòng học" }}
+              boxStyles={{
+                borderWidth: 0,
+                marginTop: 20,
+                maxWidth: "90%",
+                minWidth: "90%",
+                backgroundColor: "#f1f4f5",
+                // padding: 10,
+                borderRadius: 5,
+                shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
 
-              elevation: 5,
-            }}
-          />
-          <View style={styles.dropdowngroup}>
-            <Pressable
-              style={styles.input2}
-              onPress={() => setShowList(!showList)}
-            >
-              <Text style={{ width: "90%" }}>{test}</Text>
-              {showList == true ? (
-                <AntDesign
-                  style={{ width: "10%" }}
-                  name="up"
-                  size={24}
-                  color="black"
-                />
-              ) : (
-                <AntDesign
-                  style={{ width: "10%" }}
-                  name="down"
-                  size={24}
-                  color="black"
-                />
-              )}
-            </Pressable>
-            <View style={showList == false ? styles.list : styles.listShow}>
-              {type == "baocaosuco"
-                ? listProblem.map((item, index) => {
-                    return (
-                      <Pressable
-                        key={index}
-                        onPress={() => {
-                          setShowList(false);
-                          setTest(item);
-                        }}
-                        style={styles.item}
-                      >
-                        <Text>{item}</Text>
-                      </Pressable>
-                    );
+                elevation: 5,
+              }}
+            />
+            {/* <View style={styles.dropdowngroup}>
+              <Pressable
+                style={styles.input2}
+                onPress={() => setShowList(!showList)}
+              >
+                <Text style={{ width: "90%" }}>{test}</Text>
+                {showList == true ? (
+                  <AntDesign
+                    style={{ width: "10%" }}
+                    name="up"
+                    size={24}
+                    color="black"
+                  />
+                ) : (
+                  <AntDesign
+                    style={{ width: "10%" }}
+                    name="down"
+                    size={24}
+                    color="black"
+                  />
+                )}
+              </Pressable>
+              <View style={showList == false ? styles.list : styles.listShow}>
+                {type == "baocaosuco"
+                  ? listProblem.map((item, index) => {
+                      return (
+                        <Pressable
+                          key={index}
+                          onPress={() => {
+                            setShowList(false);
+                            setTest(item);
+                          }}
+                          style={styles.item}
+                        >
+                          <Text>{item}</Text>
+                        </Pressable>
+                      );
+                    })
+                  : listCNTT.map((item, index) => {
+                      return (
+                        <Pressable
+                          key={index}
+                          onPress={() => {
+                            setShowList(false);
+                            setTest(item);
+                          }}
+                          style={styles.item}
+                        >
+                          <Text>{item}</Text>
+                        </Pressable>
+                      );
+                    })}
+              </View>
+            </View> */}
+            <SelectList
+              save="value"
+              setSelected={(val) => {
+                setTest(val);
+                issues
+                  .filter((item, index) => {
+                    return item.name == val;
                   })
-                : listCNTT.map((item, index) => {
-                    return (
-                      <Pressable
-                        key={index}
-                        onPress={() => {
-                          setShowList(false);
-                          setTest(item);
-                        }}
-                        style={styles.item}
-                      >
-                        <Text>{item}</Text>
-                      </Pressable>
-                    );
-                  })}
-            </View>
-          </View>
-          <TextInput
-            style={styles.input3}
-            multiline={true}
-            numberOfLines={7}
-            placeholder="Mô Tả Sự Cố"
-            value={desciption}
-            onChangeText={(text) => setDescription(text)}
-          ></TextInput>
-          <View style={styles.imgGroup}>
-            <Pressable onPress={handleCameraLaunch} style={styles.btn}>
-              <Image
-                source={require("../../../../../../assets/Icons/camera.png")}
-              ></Image>
-            </Pressable>
-            <Pressable onPress={pickImage} style={styles.btn}>
-              <Image
-                source={require("../../../../../../assets/Icons/image.png")}
-              ></Image>
-            </Pressable>
-          </View>
-          <View style={styles.imgShow}>
-            {showImages()}
-            <Pressable
-              onPress={handelPresentModal}
-              style={
-                imagePicker.length != 0
-                  ? imagePicker.length >= 3
-                    ? styles.countImgShow
-                    : styles.countImg
-                  : styles.countImg
+                  .map((item, index) => {
+                    setSelectedIssues(item.idType);
+                  });
+              }}
+              data={
+                issues.length != 0 && issuesTypes.length != 0
+                  ? handleList()
+                  : []
               }
+              maxHeight={150}
+              defaultOption={{ key: "0", value: "Chọn sự cố" }}
+              boxStyles={{
+                marginTop: 20,
+                maxWidth: "90%",
+                minWidth: "90%",
+                backgroundColor: "#f1f4f5",
+
+                borderRadius: 5,
+                shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+
+                elevation: 5,
+                borderWidth: 0,
+              }}
+            />
+            <TextInput
+              style={styles.input3}
+              multiline={true}
+              numberOfLines={7}
+              placeholder="Mô Tả Sự Cố"
+              value={desciption}
+              onChangeText={(text) => setDescription(text)}
+            ></TextInput>
+            <View style={styles.imgGroup}>
+              <Pressable onPress={handleCameraLaunch} style={styles.btn}>
+                <Image
+                  source={require("../../../../../../assets/Icons/camera.png")}
+                ></Image>
+              </Pressable>
+              <Pressable onPress={pickImage} style={styles.btn}>
+                <Image
+                  source={require("../../../../../../assets/Icons/image.png")}
+                ></Image>
+              </Pressable>
+            </View>
+            <View style={styles.imgShow}>
+              {showImages()}
+              <Pressable
+                onPress={handelPresentModal}
+                style={
+                  imagePicker.length != 0
+                    ? imagePicker.length >= 3
+                      ? styles.countImgShow
+                      : styles.countImg
+                    : styles.countImg
+                }
+              >
+                {imagePicker.length != 0 ? (
+                  <Text style={{ fontSize: 30, fontWeight: 700 }}>
+                    + {imagePicker.length - 2}
+                  </Text>
+                ) : null}
+              </Pressable>
+            </View>
+            <Pressable
+              // onPress={() => {
+              //   socket.current.emit("createTicket", {
+              //     message: "HELLO FROM CREATE TICKET SCREEN",
+              //   });
+              // }}
+              onPress={validate}
+              style={styles.button2}
             >
-              {imagePicker.length != 0 ? (
-                <Text style={{ fontSize: 30, fontWeight: 700 }}>
-                  + {imagePicker.length - 2}
-                </Text>
-              ) : null}
+              <Text style={{ fontSize: 12, fontWeight: 700, color: "white" }}>
+                Gủi Yêu Cầu
+              </Text>
             </Pressable>
           </View>
-          <Pressable onPress={validate} style={styles.button2}>
-            <Text style={{ fontSize: 12, fontWeight: 700, color: "white" }}>
-              Gủi Yêu Cầu
-            </Text>
-          </Pressable>
-        </View>
+        </ScrollView>
       </View>
 
       <BottomSheetModalProvider>
-        <ScrollView>
-          <BottomSheetModal
-            ref={BottomSheetModalRef}
-            index={0}
-            snapPoints={snapPoints}
-            containerStyle={{ backgroundColor: "#00000090" }}
-            style={{ padding: 20 }}
+        <BottomSheetModal
+          ref={BottomSheetModalRef}
+          index={0}
+          snapPoints={snapPoints}
+          containerStyle={{ backgroundColor: "#00000090" }}
+          style={{ padding: 20 }}
+        >
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              width: "100%",
+              overflow: "hidden",
+              alignItems: "flex-start",
+            }}
           >
-            <View
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                width: "100%",
-                overflow: "hidden",
-                alignItems: "flex-start",
-              }}
-            >
-              {imagePicker.length != 0 ? showAllImage() : null}
-            </View>
-          </BottomSheetModal>
-        </ScrollView>
+            {imagePicker.length != 0 ? showAllImage() : null}
+          </View>
+        </BottomSheetModal>
       </BottomSheetModalProvider>
-
       <Modal
         animationType="slide"
         transparent={true}
@@ -506,7 +604,6 @@ export default function CreateTiket({ route, navigation }) {
           </View>
         </View>
       </Modal>
-
       <Modal animationType="slide" transparent={true} visible={modalVisible}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
@@ -525,21 +622,22 @@ export default function CreateTiket({ route, navigation }) {
 
 const styles = StyleSheet.create({
   container: {
-    // backgroundColor: "white",
-    width: "100%",
-    height: "100%",
-    display: "flex",
-    justifyContent: "flex-end",
+    flex: 1,
+    backgroundColor: "white",
+    // width: "100%",
+    // height: "100%",
+    // display: "flex",
+    // justifyContent: "flex-end",
   },
   content: {
     width: "100%",
-    height: "95%",
-    backgroundColor: "white",
-    paddingTop: 15,
+    height: "100%",
+    // backgroundColor: "yellow",
+    // paddingTop: insets.top,
     paddingBottom: 15,
     paddingRight: 15,
     paddingLeft: 15,
-    marginTop: Constants.statusBarHeight,
+    // marginTop: Constants.statusBarHeight,
   },
   header: {
     display: "flex",
@@ -558,6 +656,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "center",
     width: "100%",
+    paddingBottom: 100,
   },
 
   input: {
@@ -715,7 +814,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 22,
     backgroundColor: "#00000070",
   },
   modalView: {

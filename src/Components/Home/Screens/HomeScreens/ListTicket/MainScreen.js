@@ -27,12 +27,14 @@ import {
   GoogleSigninButton,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
+import { useSafeArea } from "react-native-safe-area-context";
 
 const Tab = createMaterialTopTabNavigator();
 const { Navigator, Screen } = createMaterialTopTabNavigator();
 
 export default function MainListTicketScreen({ route, navigation }) {
   const { accessToken, userID } = route.params;
+  const insets = useSafeArea();
   const MyTheme = {
     ...DefaultTheme,
     colors: {
@@ -42,7 +44,7 @@ export default function MainListTicketScreen({ route, navigation }) {
       card: "rgb(244, 245, 242)",
     },
   };
-  StatusBar.setHidden(true);
+  // StatusBar.setHidden(true);
 
   return (
     <NavigationContainer theme={MyTheme} independent={true}>
@@ -51,6 +53,7 @@ export default function MainListTicketScreen({ route, navigation }) {
           tabBarStyle: {
             backgroundColor: "white",
             shadowColor: "none",
+            paddingTop: insets.top,
           },
         }}
       >

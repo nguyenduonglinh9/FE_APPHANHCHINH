@@ -5,22 +5,28 @@ import { Dimensions } from "react-native";
 import MainScreen from "./src/Components/Home/MainScreen";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import SettingScreen from "./src/Components/Home/Screens/SettingScreen/SettingScreen";
+import { LogLevel, OneSignal } from "react-native-onesignal";
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const MyTheme = {
-    ...DefaultTheme,
-    colors: {
-      ...DefaultTheme.colors,
-      primary: "rgb(45, 83, 129)",
-      background: "#2d5381",
-      card: "rgb(244, 245, 242)",
-    },
-  };
+  // Remove this method to stop OneSignal Debugging
+  OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+
+  // OneSignal Initialization
+  OneSignal.initialize("998ad8ad-1f27-49ae-b2cf-f72ce7f7ebe2");
+  console.log("hello");
+  // We recommend removing the following code and instead using an In-App Message to prompt for notification permission
+  OneSignal.Notifications.requestPermission(true);
+
+  // Method for listening for notification clicks
+  OneSignal.Notifications.addEventListener("click", (event) => {
+    console.log("OneSignal: notification clicked:", event);
+  });
+
   return (
     <NavigationContainer>
+      <StatusBar translucent backgroundColor="transparent" />
       <View style={styles.container}>
         <View style={styles.header}></View>
         <Stack.Navigator>
