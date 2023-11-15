@@ -1,27 +1,95 @@
-import { StatusBar } from "expo-status-bar";
 import {
   StyleSheet,
   Text,
   View,
   Image,
   Pressable,
-  Linking,
-  TouchableHighlight,
-  Dimensions,
   BackHandler,
   ScrollView,
+  StatusBar,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
+import messaging from "@react-native-firebase/messaging";
+import {
+  requestUserPermission,
+  NotificationListener,
+} from "../../../../utils/pushnotification_helper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Drawer } from "react-native-drawer-layout";
+import moment from "moment/moment";
 
 export default function HomeScreen({ route, navigation }) {
+  const { userID, accessToken } = route.params;
   const [options, setOptions] = useState([]);
   const [isActive, setIsActive] = useState(false);
   const [isActiveMenu, setIsActiveMenu] = useState(false);
   const [user, setUser] = useState();
   const [types, setTypes] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [reload, setReload] = useState(false);
+  const [open, setOpen] = React.useState(false);
 
-  const { userID, accessToken } = route.params;
+  //notification
+  useEffect(() => {
+    requestUserPermission();
+    // NotificationListener();
+  }, []);
+
+  useEffect(() => {
+    messaging().setBackgroundMessageHandler(async (remoteMessage) => {
+      console.log(JSON.stringify(remoteMessage));
+    });
+  }, []);
+
+  useEffect(() => {
+    const test = async () => {
+      try {
+        let settings = await AsyncStorage.getItem(`${userID}`);
+        if (!settings) {
+          await AsyncStorage.setItem(
+            `${userID}`,
+            JSON.stringify({ isNotification: "true" })
+          );
+        } else {
+          if (JSON.parse(settings).isNotification == "false") {
+            if (user != null) {
+              messaging()
+                .subscribeToTopic(
+                  user.role == "user"
+                    ? `${user.googleID}`
+                    : user.role == "staff"
+                    ? `${user.employeeType}`
+                    : ""
+                )
+                .then((response) => {
+                  console.log("Subscribed to topic!", response);
+                })
+                .catch((error) => console.log("ERROR : ", error));
+            }
+          } else if (JSON.parse(settings).isNotification == "true") {
+            if (user != null) {
+              messaging()
+                .unsubscribeFromTopic(
+                  user.role == "user"
+                    ? `${user.googleID}`
+                    : user.role == "staff"
+                    ? `${user.employeeType}`
+                    : ""
+                )
+                .then((response) => {
+                  console.log("UNSubscribed to topic!", response);
+                })
+                .catch((error) => console.log("ERROR : ", error));
+            }
+          }
+        }
+      } catch (error) {
+        console.log("LỖI", error);
+      }
+    };
+    test();
+  }, [user]);
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
@@ -31,6 +99,18 @@ export default function HomeScreen({ route, navigation }) {
     return () => backHandler.remove();
   }, []);
 
+  //
+  useEffect(() => {
+    fetch("https://ndl-be-apphanhchinh.onrender.com/notifications", {
+      headers: {
+        access_token: accessToken,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setNotifications(data));
+  }, [reload]);
+
+  //
   useEffect(() => {
     fetch("https://ndl-be-apphanhchinh.onrender.com/issuestype", {
       headers: {
@@ -41,6 +121,7 @@ export default function HomeScreen({ route, navigation }) {
       .then((data) => setTypes(data));
   }, []);
 
+  //
   useEffect(() => {
     fetch(`https://ndl-be-apphanhchinh.onrender.com/user/${userID}`, {
       headers: {
@@ -273,136 +354,340 @@ export default function HomeScreen({ route, navigation }) {
       });
   };
   return (
-    <View style={styles.container}>
-      <View style={styles.body}>
-        <View style={styles.infor}>
-          <Image
-            style={{ height: 50, aspectRatio: "1/1", borderRadius: 10 }}
-            source={
-              user == null
-                ? require("../../../../../assets/images/user-image.png")
-                : { uri: user.imageURL }
-            }
-          ></Image>
-          <Text style={{ fontSize: 16, color: "#fff", width: "60%" }}>
-            {user == null ? "User Full Name" : user.name}
-          </Text>
-          <Image
-            source={require("../../../../../assets/Icons/bell.png")}
-          ></Image>
-        </View>
-        <Text
-          style={{
-            fontSize: 18,
-            fontWeight: 700,
-            lineHeight: 27,
-            paddingTop: 20,
-            paddingBottom: 20,
-          }}
-        >
-          Dịch Vụ Trực Tuyến
-        </Text>
-        <ScrollView style={{ width: "100%" }}>
-          <View
+    <>
+      <View style={styles.container}>
+        <View style={styles.body}>
+          <View style={styles.infor}>
+            <Image
+              style={{ height: 50, aspectRatio: "1/1", borderRadius: 10 }}
+              source={
+                user == null
+                  ? require("../../../../../assets/images/user-image.png")
+                  : { uri: user.imageURL }
+              }
+            ></Image>
+            <Text style={{ fontSize: 16, color: "#fff", width: "60%" }}>
+              {user == null ? "User Full Name" : user.name}
+            </Text>
+            <Pressable
+              onPress={() => setOpen(true)}
+              style={{
+                position: "relative",
+              }}
+            >
+              <Image
+                source={require("../../../../../assets/Icons/bell.png")}
+              ></Image>
+              {notifications.length > 0 && user != null ? (
+                notifications.filter((item, index) => {
+                  if (user.role == "staff") {
+                    return (
+                      item.isCheck == false &&
+                      item.infor.typeID == user.employeeType &&
+                      item.title == "Phiếu hỗ trợ mới"
+                    );
+                  } else if (user.role == "user") {
+                    return (
+                      item.isCheck == false &&
+                      item.infor.userID == user.googleID &&
+                      item.title == "Cập nhật phiếu hỗ trợ"
+                    );
+                  }
+                }).length > 0 ? (
+                  <Pressable
+                    onPress={() => setOpen(true)}
+                    style={{
+                      width: 20,
+                      aspectRatio: "1/1",
+                      backgroundColor: "red",
+                      position: "absolute",
+                      borderRadius: 20,
+                      top: -10,
+                      right: -10,
+                      display: "flex",
+                      flexDirection: "row",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text
+                      style={{ fontSize: 10, fontWeight: 400, color: "white" }}
+                    >{`${
+                      notifications.filter((item, index) => {
+                        if (user.role == "staff") {
+                          return (
+                            item.isCheck == false &&
+                            item.infor.typeID == user.employeeType &&
+                            item.title == "Phiếu hỗ trợ mới"
+                          );
+                        } else if (user.role == "user") {
+                          return (
+                            item.isCheck == false &&
+                            item.infor.userID == user.googleID &&
+                            item.title == "Cập nhật phiếu hỗ trợ"
+                          );
+                        }
+                      }).length
+                    }`}</Text>
+                  </Pressable>
+                ) : null
+              ) : null}
+            </Pressable>
+          </View>
+          <Text
             style={{
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              paddingBottom: 100,
+              fontSize: 18,
+              fontWeight: 700,
+              lineHeight: 27,
+              paddingTop: 20,
+              paddingBottom: 20,
             }}
           >
-            {user != null ? viewUser(user) : null}
-          </View>
-        </ScrollView>
-      </View>
-      <View
-        style={
-          isActiveMenu
-            ? { ...styles.menuThongke }
-            : { ...styles.menuThongke, display: "none" }
-        }
-      >
+            Dịch Vụ Trực Tuyến
+          </Text>
+          <ScrollView style={{ width: "100%" }}>
+            <View
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                paddingBottom: 100,
+              }}
+            >
+              {user != null ? viewUser(user) : null}
+            </View>
+          </ScrollView>
+        </View>
         <View
-          style={{
-            // backgroundColor: "red",
-            width: "100%",
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-            paddingTop: 10,
-            paddingBottom: 10,
+          style={
+            isActiveMenu
+              ? { ...styles.menuThongke }
+              : { ...styles.menuThongke, display: "none" }
+          }
+        >
+          <View
+            style={{
+              // backgroundColor: "red",
+              width: "100%",
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              paddingTop: 10,
+              paddingBottom: 10,
+            }}
+          >
+            <MaterialIcons
+              onPress={() => setIsActiveMenu(false)}
+              name="keyboard-arrow-left"
+              size={24}
+              color="black"
+            />
+            <Text style={{ fontWeight: 700, fontSize: 16 }}>
+              Sự cố trong ngày
+            </Text>
+            <Text></Text>
+          </View>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+          >
+            <View style={{ paddingBottom: 100 }}>
+              <View
+                style={{
+                  // backgroundColor: "red",
+                  width: "100%",
+                  paddingTop: 10,
+                  paddingBottom: 10,
+                }}
+              >
+                <Text style={{ fontWeight: 600, fontSize: 14 }}>Chung</Text>
+                <View
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "row",
+                    rowGap: 10,
+                    columnGap: 10,
+                    flexWrap: "wrap",
+                    // backgroundColor: "yellow",
+                    marginTop: 10,
+                  }}
+                >
+                  {types.length > 0 ? renderMenu() : null}
+                </View>
+              </View>
+              <View
+                style={{
+                  // backgroundColor: "red",
+                  width: "100%",
+                  paddingTop: 10,
+                  paddingBottom: 10,
+                }}
+              >
+                <Text style={{ fontWeight: 600, fontSize: 14 }}>
+                  Công nghệ thông tin
+                </Text>
+                <View
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "row",
+                    rowGap: 10,
+                    columnGap: 10,
+                    flexWrap: "wrap",
+                    // backgroundColor: "yellow",
+                    marginTop: 10,
+                  }}
+                >
+                  {types.length > 0 ? renderMenuCntt() : null}
+                </View>
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+        <Drawer
+          style={
+            open
+              ? {
+                  width: "100%",
+                  height: "100%",
+                  // backgroundColor: "red",
+                  zIndex: 2,
+                  position: "absolute",
+                  paddingTop: StatusBar.currentHeight,
+                }
+              : {
+                  width: "100%",
+                  height: "100%",
+                  // backgroundColor: "red",
+                  zIndex: 2,
+                  display: "none",
+                  position: "absolute",
+                  paddingTop: StatusBar.currentHeight,
+                }
+          }
+          open={open}
+          onOpen={() => setOpen(true)}
+          onClose={() => setOpen(false)}
+          renderDrawerContent={() => {
+            if (notifications.length > 0) {
+              return notifications.map((item, index) => {
+                if (item.isCheck == false) {
+                  return (
+                    <Pressable
+                      onPress={() => {
+                        navigation.navigate("DetailTicketStaff", {
+                          idTicket: item.infor._id,
+                        });
+                        setOpen(false);
+                      }}
+                      style={{
+                        backgroundColor: "#bec1c2",
+                        padding: 10,
+                        margin: 10,
+                        borderRadius: 5,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 500,
+                          lineHeight: 21,
+                        }}
+                      >
+                        {item.title}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 400,
+                          lineHeight: 21,
+                        }}
+                      >
+                        {item.description}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 400,
+                          lineHeight: 21,
+                        }}
+                      >
+                        Thời gian :{" "}
+                        {moment(item.infor.createdAt).format(
+                          "DD-MM-yyyy hh:mm a"
+                        )}
+                      </Text>
+                    </Pressable>
+                  );
+                } else {
+                  return (
+                    <View
+                      style={{
+                        backgroundColor: "#e3e7e8",
+                        padding: 10,
+                        margin: 10,
+                        borderRadius: 5,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 500,
+                          lineHeight: 21,
+                        }}
+                      >
+                        {item.title}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 400,
+                          lineHeight: 21,
+                        }}
+                      >
+                        {item.description}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 400,
+                          lineHeight: 21,
+                        }}
+                      >
+                        Thời gian :{" "}
+                        {moment(item.infor.createdAt).format(
+                          "DD-MM-yyyy hh:mm a"
+                        )}
+                      </Text>
+                    </View>
+                  );
+                }
+              });
+            } else {
+              return (
+                <View
+                  style={{
+                    // backgroundColor: "red",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ fontSize: 14, fontWeight: 500 }}>
+                    Không có thông báo nào
+                  </Text>
+                </View>
+              );
+            }
           }}
         >
-          <MaterialIcons
-            onPress={() => setIsActiveMenu(false)}
-            name="keyboard-arrow-left"
-            size={24}
-            color="black"
-          />
-          <Text style={{ fontWeight: 700, fontSize: 16 }}>
-            Sự cố trong ngày
-          </Text>
-          <Text></Text>
-        </View>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          showsHorizontalScrollIndicator={false}
-        >
-          <View style={{ paddingBottom: 100 }}>
-            <View
-              style={{
-                // backgroundColor: "red",
-                width: "100%",
-                paddingTop: 10,
-                paddingBottom: 10,
-              }}
-            >
-              <Text style={{ fontWeight: 600, fontSize: 14 }}>Chung</Text>
-              <View
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  flexDirection: "row",
-                  rowGap: 10,
-                  columnGap: 10,
-                  flexWrap: "wrap",
-                  // backgroundColor: "yellow",
-                  marginTop: 10,
-                }}
-              >
-                {types.length > 0 ? renderMenu() : null}
-              </View>
-            </View>
-            <View
-              style={{
-                // backgroundColor: "red",
-                width: "100%",
-                paddingTop: 10,
-                paddingBottom: 10,
-              }}
-            >
-              <Text style={{ fontWeight: 600, fontSize: 14 }}>
-                Công nghệ thông tin
-              </Text>
-              <View
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  flexDirection: "row",
-                  rowGap: 10,
-                  columnGap: 10,
-                  flexWrap: "wrap",
-                  // backgroundColor: "yellow",
-                  marginTop: 10,
-                }}
-              >
-                {types.length > 0 ? renderMenuCntt() : null}
-              </View>
-            </View>
-          </View>
-        </ScrollView>
+          {/* <Button
+          onPress={() => setOpen((prevOpen) => !prevOpen)}
+          title={`${open ? "Close" : "Open"} drawer`}
+        /> */}
+        </Drawer>
       </View>
-    </View>
+    </>
   );
 }
 

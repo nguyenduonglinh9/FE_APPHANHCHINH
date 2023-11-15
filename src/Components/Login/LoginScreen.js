@@ -89,9 +89,11 @@ export default function LoginScreen({ navigation }) {
               .then((res) => res.json())
               .then((data) => {
                 if (data.code == 200) {
+                  console.log(data);
                   navigation.navigate("Main", {
                     userID: data.infor.googleID,
                     accessToken: data.accessToken,
+                    userInfor: data.infor,
                   });
                 }
               })

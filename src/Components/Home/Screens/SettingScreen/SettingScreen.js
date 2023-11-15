@@ -1,20 +1,45 @@
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, Image, Pressable, Modal } from "react-native";
-import { Dimensions } from "react-native";
-import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import React, { useState, useEffect } from "react";
-import { FontAwesome5, MaterialIcons, Octicons } from "@expo/vector-icons";
 import {
-  GoogleSignin,
-  statusCodes,
-} from "@react-native-google-signin/google-signin";
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  Pressable,
+  Modal,
+  Switch,
+} from "react-native";
+import React, { useState, useEffect, useCallback, memo } from "react";
+import { FontAwesome5, MaterialIcons, Octicons } from "@expo/vector-icons";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function SettingScreen({ route, navigation, checkLogin }) {
   const { userID, accessToken } = route.params;
   const [user, setUser] = useState();
   const [reload, setReload] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(false);
+
+  useEffect(() => {
+    const test = async () => {
+      let settings = await AsyncStorage.getItem(`${userID}`);
+      console.log(JSON.parse(settings).isNotification === "true");
+      setIsEnabled(JSON.parse(settings).isNotification === "true");
+    };
+    test();
+  }, []);
+
+  const toggleSwitch = async () => {
+    setIsEnabled((previousState) => !previousState);
+
+    try {
+      await AsyncStorage.setItem(
+        `${userID}`,
+        JSON.stringify({ isNotification: (!isEnabled).toString() })
+      );
+    } catch (error) {
+      console.log("Lỗi", error);
+    }
+  };
 
   GoogleSignin.configure({
     scopes: ["https://www.googleapis.com/auth/drive.readonly"],
@@ -73,15 +98,29 @@ export default function SettingScreen({ route, navigation, checkLogin }) {
           <View style={styles.item}>
             <View
               style={{
-                backgroundColor: "#edf0f0",
-                padding: 20,
-                borderRadius: 10,
+                paddingLeft: 20,
+                paddingRight: 20,
+
+                flex: 0.2,
               }}
             >
-              <FontAwesome5 name="user" size={24} color="black" />
+              <View
+                style={{
+                  backgroundColor: "#edf0f0",
+                  with: "90%",
+                  aspectRatio: "1/1",
+                  borderRadius: 10,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <FontAwesome5 name="user" size={24} color="black" />
+              </View>
             </View>
             <Text
               style={{
+                flex: 0.6,
                 fontSize: 14,
                 fontWeight: 600,
                 width: "30%",
@@ -90,21 +129,42 @@ export default function SettingScreen({ route, navigation, checkLogin }) {
             >
               Chỉnh sửa tài khoản
             </Text>
-            <MaterialIcons
-              name="keyboard-arrow-right"
-              size={24}
-              color="black"
-            />
+            <View
+              style={{
+                flex: 0.2,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </View>
           </View>
           <View style={styles.item}>
             <View
               style={{
-                backgroundColor: "#edf0f0",
-                padding: 20,
-                borderRadius: 10,
+                paddingLeft: 20,
+                paddingRight: 20,
+                flex: 0.2,
               }}
             >
-              <Octicons name="bell" size={24} color="black" />
+              <View
+                style={{
+                  backgroundColor: "#edf0f0",
+                  with: "90%",
+                  aspectRatio: "1/1",
+                  borderRadius: 10,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Octicons name="bell" size={24} color="black" />
+              </View>
             </View>
             <Text
               style={{
@@ -112,25 +172,47 @@ export default function SettingScreen({ route, navigation, checkLogin }) {
                 fontWeight: 600,
                 width: "30%",
                 textAlign: "center",
+                flex: 0.6,
               }}
             >
               Tắt thông báo
             </Text>
-            <MaterialIcons
-              name="keyboard-arrow-right"
-              size={24}
-              color="black"
+            <Switch
+              trackColor={{ false: "#767577", true: "#81b0ff" }}
+              thumbColor={isEnabled ? "#f5dd4b" : "#f4f3f4"}
+              ios_backgroundColor="#3e3e3e"
+              onValueChange={toggleSwitch}
+              value={isEnabled}
+              style={{
+                flex: 0.2,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
             />
           </View>
           <Pressable onPress={() => setModalVisible(true)} style={styles.item}>
             <View
               style={{
-                backgroundColor: "#edf0f0",
-                padding: 20,
-                borderRadius: 10,
+                paddingLeft: 20,
+                paddingRight: 20,
+
+                flex: 0.2,
               }}
             >
-              <MaterialIcons name="logout" size={24} color="black" />
+              <View
+                style={{
+                  backgroundColor: "#edf0f0",
+                  with: "90%",
+                  aspectRatio: "1/1",
+                  borderRadius: 10,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <MaterialIcons name="logout" size={24} color="black" />
+              </View>
             </View>
             <Text
               style={{
@@ -138,16 +220,26 @@ export default function SettingScreen({ route, navigation, checkLogin }) {
                 fontWeight: 600,
                 width: "30%",
                 textAlign: "center",
+                flex: 0.6,
               }}
             >
               Đăng xuất
             </Text>
-            <MaterialIcons
-              name="keyboard-arrow-right"
-              size={24}
-              color="black"
-              style={{ opacity: 0 }}
-            />
+            <View
+              style={{
+                flex: 0.2,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+                style={{ opacity: 0 }}
+              />
+            </View>
           </Pressable>
         </View>
       </View>
@@ -242,6 +334,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     alignItems: "center",
     marginBottom: 10,
+    paddingLeft: 10,
+    paddingRight: 10,
     marginTop: 10,
   },
   centeredView: {

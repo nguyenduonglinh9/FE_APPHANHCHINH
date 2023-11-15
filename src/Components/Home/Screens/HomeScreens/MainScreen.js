@@ -14,20 +14,29 @@ import MainListStaffScreen from "./ListStaff/MainScreen";
 import MainListTicketAdmin from "./ListTicketAdmin/MainScreen";
 import MainChartScreen from "./Charts/MainScreen";
 import { io } from "socket.io-client";
+import messaging from "@react-native-firebase/messaging";
+import {
+  requestUserPermission,
+  // NotificationListener,
+} from "../../../../utils/pushnotification_helper";
+import { useIsFocused } from "@react-navigation/native";
 
 const Stack = createNativeStackNavigator();
 
 export default function MainHomeScreen({ route, navigation }) {
   const { userID, accessToken } = route.params;
-  const socket = useRef();
+  const [initialRoute, setInitialRoute] = useState("Home");
+  const [reload, setReload] = useState(true);
+  const isFocused = useIsFocused();
 
   useEffect(() => {
-    socket.current = io.connect("https://linhnd-socketoi-udhc.onrender.com");
-
-    socket.current.on("server-send-createTicket", (data) => {
-      console.log("MAIN SCREEN : " + JSON.stringify(data));
-    });
+    requestUserPermission();
+    // NotificationListener();
   }, []);
+
+  useEffect(() => {
+    setReload(isFocused);
+  }, [isFocused]);
 
   const MyTheme = {
     ...DefaultTheme,
@@ -39,75 +48,71 @@ export default function MainHomeScreen({ route, navigation }) {
     },
   };
 
-  const sendCreateTicket = (message) => {
-    socket.current.emit("on-send-data", {
-      message: message,
-    });
-  };
   return (
     <NavigationContainer theme={MyTheme} independent={true}>
-      <View style={styles.container}>
-        <View style={styles.header}></View>
-        <Stack.Navigator initialRouteName="Home">
-          <Stack.Screen
-            initialParams={{ userID: userID, accessToken: accessToken }}
-            options={{ headerShown: false }}
-            name="Home"
-            component={HomeScreen}
-          />
-          <Stack.Screen
-            initialParams={{ userID: userID, accessToken: accessToken }}
-            options={{ headerShown: false }}
-            name="CreateTicket"
-          >
-            {(props) => (
-              <CreateTiket sendCreateTicket={sendCreateTicket} {...props} />
-            )}
-          </Stack.Screen>
-          <Stack.Screen
-            initialParams={{ userID: userID, accessToken: accessToken }}
-            options={{ headerShown: false }}
-            name="DetailTicket"
-            component={DetailTicket}
-          />
-          <Stack.Screen
-            initialParams={{ userID: userID, accessToken: accessToken }}
-            options={{ headerShown: false }}
-            name="DetailTicketStaff"
-            component={DetailTicketStaff}
-          />
-          <Stack.Screen
-            initialParams={{ userID: userID, accessToken: accessToken }}
-            options={{ headerShown: false }}
-            name="MainListTicketScreen"
-            component={MainListTicketScreen}
-          />
-          <Stack.Screen
-            initialParams={{ userID: userID, accessToken: accessToken }}
-            options={{ headerShown: false }}
-            name="MainListBuildScreen"
-            component={MainListBuildScreen}
-          />
-          <Stack.Screen
-            initialParams={{ userID: userID, accessToken: accessToken }}
-            options={{ headerShown: false }}
-            name="MainListStaffScreen"
-            component={MainListStaffScreen}
-          />
-          <Stack.Screen
-            initialParams={{ userID: userID, accessToken: accessToken }}
-            options={{ headerShown: false }}
-            name="MainListTicketAdmin"
-            component={MainListTicketAdmin}
-          />
-          <Stack.Screen
-            initialParams={{ userID: userID, accessToken: accessToken }}
-            options={{ headerShown: false }}
-            name="MainChartScreen"
-            component={MainChartScreen}
-          />
-        </Stack.Navigator>
-      </View>
+      {isFocused ? (
+        <View style={styles.container}>
+          <View style={styles.header}></View>
+          <Stack.Navigator initialRouteName={initialRoute}>
+            <Stack.Screen
+              initialParams={{ userID: userID, accessToken: accessToken }}
+              options={{ headerShown: false }}
+              name="Home"
+              component={HomeScreen}
+            />
+
+            <Stack.Screen
+              initialParams={{ userID: userID, accessToken: accessToken }}
+              options={{ headerShown: false }}
+              name="CreateTicket"
+            >
+              {(props) => <CreateTiket {...props} />}
+            </Stack.Screen>
+            <Stack.Screen
+              initialParams={{ userID: userID, accessToken: accessToken }}
+              options={{ headerShown: false }}
+              name="DetailTicket"
+              component={DetailTicket}
+            />
+            <Stack.Screen
+              initialParams={{ userID: userID, accessToken: accessToken }}
+              options={{ headerShown: false }}
+              name="DetailTicketStaff"
+              component={DetailTicketStaff}
+            />
+            <Stack.Screen
+              initialParams={{ userID: userID, accessToken: accessToken }}
+              options={{ headerShown: false }}
+              name="MainListTicketScreen"
+              component={MainListTicketScreen}
+            />
+            <Stack.Screen
+              initialParams={{ userID: userID, accessToken: accessToken }}
+              options={{ headerShown: false }}
+              name="MainListBuildScreen"
+              component={MainListBuildScreen}
+            />
+            <Stack.Screen
+              initialParams={{ userID: userID, accessToken: accessToken }}
+              options={{ headerShown: false }}
+              name="MainListStaffScreen"
+              component={MainListStaffScreen}
+            />
+            <Stack.Screen
+              initialParams={{ userID: userID, accessToken: accessToken }}
+              options={{ headerShown: false }}
+              name="MainListTicketAdmin"
+              component={MainListTicketAdmin}
+            />
+            <Stack.Screen
+              initialParams={{ userID: userID, accessToken: accessToken }}
+              options={{ headerShown: false }}
+              name="MainChartScreen"
+              component={MainChartScreen}
+            />
+          </Stack.Navigator>
+        </View>
+      ) : null}
     </NavigationContainer>
   );
 }

@@ -22,11 +22,13 @@ import {
   GoogleSigninButton,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
+import { SelectList } from "react-native-dropdown-select-list";
 
 export default function ListStaffScreen({ toDetailScreen, route, navigation }) {
   const { userID, accessToken } = route.params;
   const [staff, setStaff] = useState([]);
   const [types, setTypes] = useState([]);
+  const [selectedType, setSelectedType] = useState("");
 
   //get all staff
   useEffect(() => {
@@ -101,7 +103,33 @@ export default function ListStaffScreen({ toDetailScreen, route, navigation }) {
           <Text style={{ fontWeight: 700, fontSize: 24 }}>
             Danh sách nhân sự
           </Text>
+          <SelectList
+            save="key"
+            setSelected={(val) => setSelectedType(val)}
+            data={types.length != 0 ? types : []}
+            maxHeight={150}
+            defaultOption={{ key: "0", value: "Phân loại" }}
+            boxStyles={{
+              marginTop: 20,
+              maxWidth: "90%",
+              minWidth: "90%",
+              backgroundColor: "#f1f4f5",
+              // padding: 10,
+              borderRadius: 5,
+              shadowColor: "#000",
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+
+              elevation: 5,
+              borderWidth: 0,
+            }}
+          />
         </View>
+
         <View style={styles.list}>
           <Text
             style={{ padding: 10, opacity: 0.5, fontSize: 14, fontWeight: 600 }}

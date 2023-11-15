@@ -134,11 +134,19 @@ export default function TicketProcessing({ route, navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.list}>
-        {tickets.length > 0 && user != null ? (
-          RenderTicket()
-        ) : (
-          <Text>Chưa có phiếu hỗ trọ yêu cầu</Text>
-        )}
+        {user != null ? (
+          tickets.filter((item, index) => {
+            return (
+              item.typeID == user.employeeType && item.status == "processing"
+            );
+          }).length > 0 ? (
+            RenderTicket()
+          ) : (
+            <View>
+              <Text>Chưa có phiếu hỗ trọ yêu cầu</Text>
+            </View>
+          )
+        ) : null}
       </View>
     </View>
   );

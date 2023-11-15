@@ -278,9 +278,30 @@ export default function DetailStaffScreen({ route, navigation }) {
       .then((res) => res.json())
       .then((data) => {
         if (data.code == 200) {
-          setLoading(false);
-          setModalVisible(false);
-          setFresh(!refresh);
+          const test = types.find((item, index) => {
+            return item._id == employeeType;
+          });
+
+          fetch("https://ndl-be-apphanhchinh.onrender.com/histories/create", {
+            headers: {
+              access_token: accessToken,
+              "Content-Type": "application/json",
+            },
+            method: "POST",
+            body: JSON.stringify({
+              description: `Cấp quyền nhân viên ${test.name} cho nhân viên ${user.name}`,
+              createdAt: new Date(),
+            }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              console.log(data);
+              if (data.code == 200) {
+                setLoading(false);
+                setModalVisible(false);
+                setFresh(!refresh);
+              }
+            });
         }
       });
   };

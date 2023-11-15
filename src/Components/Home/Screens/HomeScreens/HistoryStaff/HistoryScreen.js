@@ -39,11 +39,11 @@ export default function HistoryScreen({ route, navigation }) {
     const filterTicket = tickets.filter((item, index) => {
       return item.staffID == userID && item.status == "finished";
     });
-
+    console.log(filterTicket.length);
     if (filterTicket.length <= 0) {
       return (
         <View>
-          <Text>Bạn chưa hoàn thành phiếu nào</Text>;
+          <Text>Bạn chưa hoàn thành bất kỳ phiếu nào</Text>
         </View>
       );
     } else {
@@ -179,7 +179,13 @@ export default function HistoryScreen({ route, navigation }) {
               paddingBottom: 100,
             }}
           >
-            {tickets.length != 0 ? renderTicket() : null}
+            {tickets.length != 0 ? (
+              renderTicket()
+            ) : (
+              <View>
+                <Text>Chưa hoàn thành phiếu nào</Text>
+              </View>
+            )}
           </View>
         </ScrollView>
       </View>

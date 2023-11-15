@@ -37,7 +37,9 @@ export default function TicketPending({ route, navigation }) {
       },
     })
       .then((res) => res.json())
-      .then((data) => setTickets(data));
+      .then((data) => {
+        setTickets(data);
+      });
   }, []);
 
   useEffect(() => {
@@ -128,14 +130,21 @@ export default function TicketPending({ route, navigation }) {
         );
       });
   };
+
   return (
     <View style={styles.container}>
       <View style={styles.list}>
-        {tickets.length > 0 && user != null ? (
-          RenderTicket()
-        ) : (
-          <Text>Chưa có phiếu hỗ trọ yêu cầu</Text>
-        )}
+        {user != null ? (
+          tickets.filter((item, index) => {
+            return item.typeID == user.employeeType && item.status == "pending";
+          }).length > 0 ? (
+            RenderTicket()
+          ) : (
+            <View>
+              <Text>Chưa có phiếu hỗ trọ yêu cầu</Text>
+            </View>
+          )
+        ) : null}
       </View>
     </View>
   );

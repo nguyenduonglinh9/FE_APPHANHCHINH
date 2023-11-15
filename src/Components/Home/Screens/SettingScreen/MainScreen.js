@@ -10,11 +10,18 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 import { useEffect } from "react";
+import {
+  requestUserPermission,
+  NotificationListener,
+} from "../../../../utils/pushnotification_helper";
+import { useIsFocused } from "@react-navigation/native";
 
 const Stack = createNativeStackNavigator();
 
 export default function MainHomeScreen({ route, navigation, checkLogin }) {
   const { userID, accessToken } = route.params;
+  const isFocused = useIsFocused();
+
   const MyTheme = {
     ...DefaultTheme,
     colors: {
@@ -24,6 +31,11 @@ export default function MainHomeScreen({ route, navigation, checkLogin }) {
       card: "rgb(244, 245, 242)",
     },
   };
+  useEffect(() => {
+    requestUserPermission();
+    // NotificationListener();
+  }, []);
+
   GoogleSignin.configure({
     scopes: ["https://www.googleapis.com/auth/drive.readonly"],
 
@@ -35,24 +47,28 @@ export default function MainHomeScreen({ route, navigation, checkLogin }) {
 
   return (
     <NavigationContainer theme={MyTheme} independent={true}>
-      <View style={styles.container}>
-        <View style={styles.header}></View>
-        <Stack.Navigator initialRouteName="history">
-          <Stack.Screen
-            initialParams={{
-              userID: userID,
-              accessToken: accessToken,
-              checkLogin: checkLogin,
-            }}
-            options={{ headerShown: false }}
-            name="history"
-          >
-            {(props) => (
-              <SettingScreen {...props} checkLogin={checkLogin}></SettingScreen>
-            )}
-          </Stack.Screen>
-        </Stack.Navigator>
-      </View>
+      {isFocused ? (
+        <View style={styles.container}>
+          <View style={styles.header}></View>
+          <Stack.Navigator initialRouteName="history">
+            <Stack.Screen
+              initialParams={{
+                userID: userID,
+                accessToken: accessToken,
+              }}
+              options={{ headerShown: false }}
+              name="history"
+            >
+              {(props) => (
+                <SettingScreen
+                  {...props}
+                  checkLogin={checkLogin}
+                ></SettingScreen>
+              )}
+            </Stack.Screen>
+          </Stack.Navigator>
+        </View>
+      ) : null}
     </NavigationContainer>
   );
 }

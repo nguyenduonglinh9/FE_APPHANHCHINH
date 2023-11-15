@@ -137,7 +137,7 @@ export default function DetailTicket({ route, navigation }) {
             color="black"
           />
           <Text style={{ fontSize: 18, fontWeight: 700 }}>
-            Yêu Cầu Hỗ Trợ CNTT
+            Yêu Cầu Hỗ Trợ CNT
           </Text>
         </View>
         <ScrollView

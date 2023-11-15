@@ -42,21 +42,10 @@ export default function CreateTiket({ route, navigation, sendCreateTicket }) {
   const [loading, setLoading] = useState(false);
   const [issuesTypes, setIssuesTypes] = useState([]);
   const [issues, setIssues] = useState([]);
-
-  const socket = useRef();
   const insets = useSafeArea();
 
   const BottomSheetModalRef = useRef(null);
   const snapPoints = ["90%"];
-
-  //socketIO
-  useEffect(() => {
-    socket.current = io.connect("https://linhnd-socketoi-udhc.onrender.com");
-
-    // socket.current.on("server-send-data", (data) => {
-    //   console.log(data);
-    // });
-  }, []);
 
   useEffect(() => {
     fetch("https://ndl-be-apphanhchinh.onrender.com/issuestype", {
@@ -271,7 +260,6 @@ export default function CreateTiket({ route, navigation, sendCreateTicket }) {
             for (let i = 0; i < data.message.length; i++) {
               images.push(data.message[i].path);
             }
-
             const Data = {
               title: test,
               description: desciption,
@@ -305,10 +293,48 @@ export default function CreateTiket({ route, navigation, sendCreateTicket }) {
               .then((res) => res.json())
               .then((data) => {
                 if (data.code == 200) {
-                  setModalVisible(false);
-                  navigation.navigate("DetailTicket", {
-                    idTicket: data.infor._id,
-                  });
+                  fetch(
+                    "https://ndl-be-apphanhchinh.onrender.com/notifications/create",
+                    {
+                      headers: {
+                        access_token: accessToken,
+                        "Content-type": "application/json; charset=UTF-8",
+                      },
+                      body: JSON.stringify({
+                        title: "Phiếu hỗ trợ mới",
+                        description: "Một phiếu hỗ trợ mới vừa được tạo",
+                        infor: data.infor,
+                      }),
+                      method: "POST",
+                    }
+                  )
+                    .then((res) => res.json())
+                    .then((data2) => {
+                      if (data2.code == 200) {
+                        setModalVisible(false);
+                        navigation.navigate("DetailTicket", {
+                          idTicket: data.infor._id,
+                        });
+                        fetch("https://fcm.googleapis.com/fcm/send", {
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization:
+                              "key=AAAAR4XwSVU:APA91bFdlEOZLCyjmYW-Six0HS6FdMlH2hnzGqfnIBTQ-V5nomx_38aZxnLP6VYtYs9bGSkWocWHAcO4a3nkYqSx4wCgp-iexjXFAqLecqbpxKQcU7qIJz2riW2thOGneGMqXJyHaG7C",
+                          },
+                          method: "POST",
+                          body: JSON.stringify({
+                            data: { ...data.infor },
+                            notification: {
+                              title: "Phiếu hỗ trợ mới",
+                              body: "Một phiếu hỗ trợ mới vừa được tạo",
+                            },
+                            to: `/topics/${Data.typeID}`,
+                          }),
+                        })
+                          .then((res) => res.json())
+                          .then((data) => {});
+                      }
+                    });
                 }
               });
           }

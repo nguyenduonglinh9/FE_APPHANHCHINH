@@ -10,19 +10,6 @@ import { LogLevel, OneSignal } from "react-native-onesignal";
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  // Remove this method to stop OneSignal Debugging
-  OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-
-  // OneSignal Initialization
-  OneSignal.initialize("998ad8ad-1f27-49ae-b2cf-f72ce7f7ebe2");
-  console.log("hello");
-  // We recommend removing the following code and instead using an In-App Message to prompt for notification permission
-  OneSignal.Notifications.requestPermission(true);
-
-  // Method for listening for notification clicks
-  OneSignal.Notifications.addEventListener("click", (event) => {
-    console.log("OneSignal: notification clicked:", event);
-  });
 
   return (
     <NavigationContainer>

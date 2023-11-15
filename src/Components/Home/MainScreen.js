@@ -15,29 +15,30 @@ import {
   AntDesign,
   MaterialIcons,
 } from "@expo/vector-icons";
+import messaging from "@react-native-firebase/messaging";
+import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 import MainHomeScreen from "./Screens/HomeScreens/MainScreen";
 import MainHistoryScreen from "../Home/Screens/HistoryScreen/MainScreen";
 import MainSettingScreen from "../Home/Screens/SettingScreen/MainScreen";
 import MainContactScreen from "./Screens/ContactScreen/MainScreen";
 import MainHistoryStaffScreen from "./Screens/HomeScreens/HistoryStaff/MainScreen";
-import {
-  GoogleSignin,
-  GoogleSigninButton,
-  statusCodes,
-} from "@react-native-google-signin/google-signin";
+import MainHistoryAdminScreen from "./Screens/HomeScreens/HistoryAdmin/MainScreen";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
-import socketIOClient from "socket.io-client";
-const host = "https://ndl-be-apphanhchinh.onrender.com";
+import {
+  requestUserPermission,
+  NotificationListener,
+} from "../../utils/pushnotification_helper";
 
 const Tab = createMaterialBottomTabNavigator();
 
 export default function MainScreen({ route, navigation }) {
-  const { userID, accessToken } = route.params;
+  const { userID, accessToken, userInfor } = route.params;
   const [user, setUser] = useState();
-  const socketRef = useRef();
 
   useEffect(() => {
-    const socket = socketIOClient.connect(host);
+    requestUserPermission();
+    // NotificationListener();
   }, []);
 
   const MyTheme = {
@@ -86,6 +87,15 @@ export default function MainScreen({ route, navigation }) {
     } else {
       console.log("Đã đăng xuất");
       navigation.navigate("Home");
+      messaging()
+        .unsubscribeFromTopic(
+          user.role == "user"
+            ? `${user.googleID}`
+            : user.role == "staff"
+            ? `${user.employeeType}`
+            : ""
+        )
+        .then(() => console.log("Unsubscribed fom the topic!"));
     }
   };
 
@@ -147,90 +157,94 @@ export default function MainScreen({ route, navigation }) {
       );
     } else {
       return (
-        <NavigationContainer independent={true} theme={MyTheme}>
-          <Tab.Navigator
-            shifting={true}
-            activeColor="black"
-            barStyle={{
-              height: 80,
+        <>
+          <NavigationContainer independent={true} theme={MyTheme}>
+            <Tab.Navigator
+              shifting={true}
+              activeColor="black"
+              barStyle={{
+                height: 80,
 
-              backgroundColor: "#f4f0f7",
-              overflow: "hidden",
-              position: "absolute",
-            }}
-          >
-            <Tab.Screen
-              initialParams={{ userID: userID, accessToken: accessToken }}
-              name="HomeScreen"
-              component={MainHomeScreen}
-              options={{
-                headerShown: false,
-                tabBarLabel: "Trang chủ",
-                tabBarIcon: ({ color, size }) => (
-                  <Feather name="home" size={24} color={color} />
-                ),
-              }}
-            />
-            <Tab.Screen
-              initialParams={{ userID: userID, accessToken: accessToken }}
-              name="HistoryScreen"
-              component={
-                user.role == "user"
-                  ? MainHistoryScreen
-                  : user.role == "staff"
-                  ? MainHistoryStaffScreen
-                  : MainHistoryScreen
-              }
-              options={{
-                headerShown: false,
-                tabBarLabel: "Lịch Sử",
-                tabBarIcon: ({ color, size }) => (
-                  <FontAwesome name="history" size={24} color={color} />
-                ),
-              }}
-            />
-            <Tab.Screen
-              initialParams={{
-                userID: userID,
-                accessToken: accessToken,
-              }}
-              name="SettingScreen"
-              options={{
-                headerShown: false,
-                tabBarLabel: "Cài Đặt",
-                tabBarIcon: ({ color, size }) => (
-                  <AntDesign name="setting" size={24} color={color} />
-                ),
+                backgroundColor: "#f4f0f7",
+                overflow: "hidden",
+                position: "absolute",
               }}
             >
-              {(props) => (
-                <MainSettingScreen
-                  {...props}
-                  checkLogin={checkLogin}
-                ></MainSettingScreen>
-              )}
-            </Tab.Screen>
-            {user != null ? (
-              user.role == "user" ? (
-                <Tab.Screen
-                  initialParams={{
-                    userID: userID,
-                    accessToken: accessToken,
-                  }}
-                  name="ContactScreen"
-                  component={MainContactScreen}
-                  options={{
-                    headerShown: false,
-                    tabBarLabel: "Liên Hệ",
-                    tabBarIcon: ({ color, size }) => (
-                      <Feather name="phone" size={24} color={color} />
-                    ),
-                  }}
-                />
-              ) : null
-            ) : null}
-          </Tab.Navigator>
-        </NavigationContainer>
+              <Tab.Screen
+                initialParams={{ userID: userID, accessToken: accessToken }}
+                name="HomeScreen"
+                component={MainHomeScreen}
+                options={{
+                  headerShown: false,
+                  tabBarLabel: "Trang chủ",
+                  tabBarIcon: ({ color, size }) => (
+                    <Feather name="home" size={24} color={color} />
+                  ),
+                }}
+              />
+              <Tab.Screen
+                initialParams={{ userID: userID, accessToken: accessToken }}
+                name="HistoryScreen"
+                component={
+                  user.role == "user"
+                    ? MainHistoryScreen
+                    : user.role == "staff"
+                    ? MainHistoryStaffScreen
+                    : user.role == "admin"
+                    ? MainHistoryAdminScreen
+                    : null
+                }
+                options={{
+                  headerShown: false,
+                  tabBarLabel: "Lịch Sử",
+                  tabBarIcon: ({ color, size }) => (
+                    <FontAwesome name="history" size={24} color={color} />
+                  ),
+                }}
+              />
+              <Tab.Screen
+                initialParams={{
+                  userID: userID,
+                  accessToken: accessToken,
+                }}
+                name="SettingScreen"
+                options={{
+                  headerShown: false,
+                  tabBarLabel: "Cài Đặt",
+                  tabBarIcon: ({ color, size }) => (
+                    <AntDesign name="setting" size={24} color={color} />
+                  ),
+                }}
+              >
+                {(props) => (
+                  <MainSettingScreen
+                    {...props}
+                    checkLogin={checkLogin}
+                  ></MainSettingScreen>
+                )}
+              </Tab.Screen>
+              {user != null ? (
+                user.role == "user" ? (
+                  <Tab.Screen
+                    initialParams={{
+                      userID: userID,
+                      accessToken: accessToken,
+                    }}
+                    name="ContactScreen"
+                    component={MainContactScreen}
+                    options={{
+                      headerShown: false,
+                      tabBarLabel: "Liên Hệ",
+                      tabBarIcon: ({ color, size }) => (
+                        <Feather name="phone" size={24} color={color} />
+                      ),
+                    }}
+                  />
+                ) : null
+              ) : null}
+            </Tab.Navigator>
+          </NavigationContainer>
+        </>
       );
     }
   }
